@@ -3,11 +3,15 @@ export type Difficulty = 'easy' | 'normal' | 'hard';
 export type RaceMode = 'race' | 'time';
 export type Quality = 'low' | 'medium' | 'high';
 export type ItemType = 'boost' | 'shield' | 'water' | 'banana';
+export type DrivingMode = 'assisted' | 'manual';
+export type Lane = -1 | 0 | 1;
+export type InteractionKind = 'jump' | 'drift' | 'spin';
 export type Phase = 'countdown' | 'racing' | 'paused' | 'finished';
 export interface RaceConfig {
   characterId: CharacterId;
   difficulty: Difficulty;
   mode: RaceMode;
+  driving?: DrivingMode;
 }
 export interface InputState {
   throttle: number;
@@ -15,6 +19,9 @@ export interface InputState {
   drift: boolean;
   item: boolean;
   recover: boolean;
+  lane?: Lane | null;
+  nitro?: boolean;
+  interact?: boolean;
 }
 export const EMPTY_INPUT: InputState = {
   throttle: 0,
@@ -130,6 +137,15 @@ export interface Racer {
   offroad: boolean;
   recovery: number;
   completedDistance: number;
+  targetLane: Lane;
+  nitro: number;
+  nitroTime: number;
+  actionKind: InteractionKind | null;
+  actionTime: number;
+  actionDuration: number;
+  perfectActions: number;
+  successfulActions: number;
+  nitroUses: number;
 }
 export interface Projectile extends Point {
   id: number;
@@ -154,9 +170,32 @@ export interface RaceEvent {
     | 'shield'
     | 'lap'
     | 'finish'
-    | 'recover';
+    | 'recover'
+    | 'nitro'
+    | 'charge'
+    | 'route'
+    | 'interaction';
   racerId: number;
   value?: number | string;
+}
+export interface RoutePrompt {
+  id: string;
+  distance: number;
+  left: string;
+  right: string;
+}
+export interface InteractionPrompt {
+  id: string;
+  kind: InteractionKind;
+  title: string;
+  distance: number;
+  available: boolean;
+  perfect: boolean;
+}
+export interface NitroPickup {
+  progress: number;
+  lane: Lane;
+  collectedLap: number;
 }
 export interface RaceSnapshot {
   phase: Phase;
@@ -167,6 +206,9 @@ export interface RaceSnapshot {
   boxes: readonly ItemBox[];
   standings: readonly Racer[];
   config: RaceConfig;
+  route: RoutePrompt | null;
+  interaction: InteractionPrompt | null;
+  pickups: readonly NitroPickup[];
 }
 export interface Settings {
   quality: Quality;
@@ -175,6 +217,7 @@ export interface Settings {
   volume: number;
   characterId: CharacterId;
   difficulty: Difficulty;
+  driving: DrivingMode;
 }
 export interface PersonalRecord {
   lap: number | null;

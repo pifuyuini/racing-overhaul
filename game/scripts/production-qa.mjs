@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { writeFile } from 'node:fs/promises';
 import path from 'node:path';
 const dir = process.env.QA_ARTIFACT_DIR;
+const base = process.env.QA_BASE_URL ?? 'http://10.10.10.1:4173/';
+const origin = new URL(base).origin;
 if (!dir) throw new Error('QA_ARTIFACT_DIR required');
 const browser = await chromium.launch({
   executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
@@ -13,19 +15,35 @@ const errors = [],
   external = [];
 page.on('pageerror', (e) => errors.push(e.message));
 page.on('request', (r) => {
-  if (r.url().startsWith('http') && !r.url().startsWith('http://10.10.10.1:4173'))
-    external.push(r.url());
+  if (r.url().startsWith('http') && !r.url().startsWith(origin + '/')) external.push(r.url());
 });
 try {
-  await page.goto('http://10.10.10.1:4173/', { waitUntil: 'networkidle' });
+  await page.goto(base, { waitUntil: 'networkidle' });
   assert.equal(await page.evaluate(() => typeof window.__PAWPRINT_TEST__), 'undefined');
   await page.getByRole('button', { name: '出发，去兜个风' }).click();
   await page.locator('[data-id="penguin"]').click();
   await page.getByRole('button', { name: '驶上发车线' }).click();
   await page.locator('#countdown').filter({ hasText: 'GO!' }).waitFor();
-  await page.keyboard.down('KeyW');
   await page.waitForFunction(() => Number(document.querySelector('#speed').textContent) > 60);
-  await page.keyboard.up('KeyW');
+  assert.equal(await page.locator('.assist-badge').isVisible(), true);
+  await page.keyboard.press('ArrowRight');
+  await page.waitForFunction(
+    () =>
+      document
+        .querySelector('.lane-controls [data-action="drive-right"]')
+        .getAttribute('aria-pressed') === 'true',
+  );
+  await page.keyboard.press('Space');
+  await page.locator('#nitro-title').filter({ hasText: '正在冲刺' }).waitFor();
+  const rendering = await page.evaluate(() => {
+    const gl = document.querySelector('#world').getContext('webgl2');
+    const ext = gl.getExtension('WEBGL_debug_renderer_info');
+    return {
+      gpu: ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER),
+      viewport: [innerWidth, innerHeight],
+      quality: JSON.parse(localStorage.getItem('pawprint-paradise-v1')).settings.quality,
+    };
+  });
   await page.screenshot({
     path: path.join(dir, 'production-driving.jpg'),
     type: 'jpeg',
@@ -48,7 +66,7 @@ try {
       },
     });
   });
-  await blockedPage.goto('http://10.10.10.1:4173/', { waitUntil: 'networkidle' });
+  await blockedPage.goto(base, { waitUntil: 'networkidle' });
   await blockedPage.getByRole('button', { name: '出发，去兜个风' }).click();
   await blockedPage.getByRole('button', { name: '驶上发车线' }).click();
   await blockedPage.locator('#countdown').filter({ hasText: 'GO!' }).waitFor();
@@ -58,9 +76,11 @@ try {
     recordedAt: new Date().toISOString(),
     browserVersion: browser.version(),
     blockedStorageStillPlayable: true,
-    url: 'http://10.10.10.1:4173/',
+    url: base,
+    rendering,
     productionTestApiAbsent: true,
-    keyboardDriving: true,
+    automaticAcceleration: true,
+    keyboardLaneAndNitro: true,
     pauseAndReturn: true,
     noExternalRequests: true,
     errors,

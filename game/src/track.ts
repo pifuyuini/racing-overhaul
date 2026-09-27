@@ -126,3 +126,26 @@ export const TRACK = new Track();
 export const BOOST_PADS = [0.065, 0.37, 0.715];
 export const BRIDGE_START = 0.185;
 export const BRIDGE_END = 0.245;
+
+export const LANE_OFFSETS = [-4.6, 0, 4.6] as const;
+export const ROUTE_GATES = [
+  { id: 'coast', progress: 0.115 },
+  { id: 'grove', progress: 0.67 },
+];
+export const INTERACTIONS = [
+  { id: 'bridge-jump', progress: 0.215, kind: 'jump' as const, title: '木桥飞跃' },
+  { id: 'canyon-drift', progress: 0.51, kind: 'drift' as const, title: '砂岩漂移' },
+  { id: 'village-spin', progress: 0.87, kind: 'spin' as const, title: '海风回旋' },
+];
+export const NITRO_PICKUPS = [
+  { progress: 0.055, lane: -1 as const },
+  { progress: 0.16, lane: 1 as const },
+  { progress: 0.3, lane: 1 as const },
+  { progress: 0.4, lane: -1 as const },
+  { progress: 0.58, lane: 0 as const },
+  { progress: 0.74, lane: -1 as const },
+  { progress: 0.81, lane: 1 as const },
+  { progress: 0.95, lane: 0 as const },
+];
+export const forwardDistance = (from: number, to: number) =>
+  (mod(to - from + 0.5) - 0.5) * TRACK.length;

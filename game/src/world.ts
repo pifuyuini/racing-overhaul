@@ -1,5 +1,17 @@
 import * as THREE from 'three';
-import { TRACK, ROAD_WIDTH, BOOST_PADS, BRIDGE_START, BRIDGE_END, angleDelta, mod } from './track';
+import {
+  TRACK,
+  ROAD_WIDTH,
+  BOOST_PADS,
+  BRIDGE_START,
+  BRIDGE_END,
+  angleDelta,
+  mod,
+  LANE_OFFSETS,
+  ROUTE_GATES,
+  INTERACTIONS,
+  NITRO_PICKUPS,
+} from './track';
 import {
   createKart,
   batchStatic,
@@ -36,6 +48,9 @@ export class GameWorld {
   private lastTime = 0;
   private staticRoot = new THREE.Group();
   private flagMeshes: THREE.Mesh[] = [];
+  private assistedRoot = new THREE.Group();
+  private energyCrystals: THREE.Mesh[] = [];
+  private laneArrows: THREE.Mesh[] = [];
   constructor(readonly canvas: HTMLCanvasElement) {
     this.renderer = new THREE.WebGLRenderer({
       canvas,
@@ -93,6 +108,7 @@ export class GameWorld {
     this.createRoad();
     this.createScenery();
     batchStatic(this.staticRoot);
+    this.createAssistedFeatures();
     const particleGeo = new THREE.BufferGeometry();
     particleGeo.setAttribute('position', new THREE.BufferAttribute(this.particlePositions, 3));
     particleGeo.setAttribute('color', new THREE.BufferAttribute(this.particleColors, 3));
@@ -113,6 +129,126 @@ export class GameWorld {
     this.setQuality('medium');
     window.addEventListener('resize', () => this.resize());
     this.resize();
+  }
+  private createAssistedFeatures() {
+    const fixed = new THREE.Group();
+    const turquoise = material(0x57ead2),
+      gold = material(0xffce64),
+      wood = material(0x916647);
+    this.assistedRoot.add(fixed);
+    this.scene.add(this.assistedRoot);
+    for (const gate of ROUTE_GATES) {
+      for (const side of [-1, 1]) {
+        const p = TRACK.at(gate.progress, side * 4.6);
+        const group = new THREE.Group();
+        group.position.set(p.x, p.y, p.z);
+        group.rotation.y = p.yaw;
+        fixed.add(group);
+        const mat = side < 0 ? turquoise : gold;
+        box(group, mat, 0, 0.09, 0, 4.1, 0.12, 5, 0);
+        for (const dx of [-2.25, 2.25]) cylinder(group, wood, dx, 1.9, 0, 0.1, 0.14, 3.8, 7);
+        const sign = this.textPlane(
+          side < 0 ? '氮气 +35' : '能量补给',
+          384,
+          96,
+          '#fff4d5',
+          side < 0 ? '#267c76' : '#b7743d',
+          4.7,
+          1.18,
+        );
+        sign.position.set(0, 3.8, 0);
+        sign.rotation.y = Math.PI;
+        group.add(sign);
+      }
+    }
+    for (const point of INTERACTIONS) {
+      const p = TRACK.at(point.progress),
+        group = new THREE.Group();
+      group.position.set(p.x, p.y, p.z);
+      group.rotation.y = p.yaw;
+      fixed.add(group);
+      // Painted approach stripes and a timing ring are non-colliding invitations.
+      for (let j = 0; j < 3; j++) box(group, gold, 0, 0.085, -j * 3, 14 - j, 0.05, 0.35, 0);
+      const ring = new THREE.Mesh(
+        new THREE.RingGeometry(3.7, 4, 36),
+        new THREE.MeshBasicMaterial({ color: 0xffdc77, side: THREE.DoubleSide }),
+      );
+      ring.rotation.x = -Math.PI / 2;
+      ring.position.y = 0.12;
+      group.add(ring);
+      for (const side of [-1, 1]) {
+        cylinder(group, wood, side * 8, 1.4, 0, 0.1, 0.14, 2.8, 7);
+        const sign = this.textPlane('F  ' + point.title, 512, 128, '#164c51', '#ffdc77', 4, 1);
+        sign.position.set(side * 8, 2.9, 0);
+        sign.rotation.y = Math.PI;
+        group.add(sign);
+      }
+    }
+    batchStatic(fixed);
+    const crystalGeometry = new THREE.OctahedronGeometry(0.72);
+    const crystalMaterial = new THREE.MeshStandardMaterial({
+      color: 0x8bffea,
+      emissive: 0x19baac,
+      emissiveIntensity: 0.65,
+      metalness: 0.25,
+      roughness: 0.15,
+    });
+    for (const pickup of NITRO_PICKUPS) {
+      const p = TRACK.at(pickup.progress, LANE_OFFSETS[pickup.lane + 1]);
+      const mesh = new THREE.Mesh(crystalGeometry, crystalMaterial);
+      mesh.position.set(p.x, p.y + 1.45, p.z);
+      mesh.scale.y = 1.5;
+      this.assistedRoot.add(mesh);
+      this.energyCrystals.push(mesh);
+    }
+    const shape = new THREE.Shape();
+    shape.moveTo(-0.52, -0.8);
+    shape.lineTo(0, -1.5);
+    shape.lineTo(0.52, -0.8);
+    shape.lineTo(0.22, -0.8);
+    shape.lineTo(0.22, 0);
+    shape.lineTo(-0.22, 0);
+    shape.lineTo(-0.22, -0.8);
+    shape.closePath();
+    const arrowGeo = new THREE.ShapeGeometry(shape);
+    for (let i = 0; i < 9; i++) {
+      const mesh = new THREE.Mesh(
+        arrowGeo,
+        new THREE.MeshBasicMaterial({
+          color: 0xa5ffee,
+          transparent: true,
+          opacity: 0.64,
+          depthWrite: false,
+          side: THREE.DoubleSide,
+        }),
+      );
+      mesh.rotation.x = -Math.PI / 2;
+      this.assistedRoot.add(mesh);
+      this.laneArrows.push(mesh);
+    }
+  }
+  private updateAssistedFeatures(snapshot: RaceSnapshot, time: number, visible: boolean) {
+    this.assistedRoot.visible = visible && snapshot.config.driving !== 'manual';
+    if (!this.assistedRoot.visible) return;
+    const player = snapshot.racers[0];
+    this.energyCrystals.forEach((mesh, i) => {
+      const pickup = snapshot.pickups[i];
+      mesh.visible = !!pickup && pickup.collectedLap !== player.laps;
+      if (pickup) {
+        const p = TRACK.at(pickup.progress, LANE_OFFSETS[pickup.lane + 1]);
+        mesh.position.y = p.y + 1.5 + Math.sin(time * 2.7 + i) * 0.2;
+        mesh.rotation.y = time * 1.5 + i;
+      }
+    });
+    this.laneArrows.forEach((mesh, i) => {
+      const p = TRACK.at(
+        player.progress + (8 + i * 4) / TRACK.length,
+        LANE_OFFSETS[player.targetLane + 1],
+      );
+      mesh.position.set(p.x, p.y + 0.16, p.z);
+      mesh.rotation.set(-Math.PI / 2, 0, p.yaw);
+      (mesh.material as THREE.MeshBasicMaterial).opacity = 0.64 - i * 0.055;
+    });
   }
   private createSky() {
     const sky = new THREE.Mesh(
@@ -715,6 +851,7 @@ export class GameWorld {
     mode: 'race' | 'menu' | 'results' = 'race',
   ) {
     this.ensureRoster(snapshot);
+    this.updateAssistedFeatures(snapshot, time, mode === 'race');
     if (this.startArch) this.startArch.visible = mode !== 'menu';
     const dt = Math.min(0.05, time - this.lastTime || 0.016);
     this.lastTime = time;
@@ -725,12 +862,29 @@ export class GameWorld {
       const x = r.previousX + (r.x - r.previousX) * alpha,
         z = r.previousZ + (r.z - r.previousZ) * alpha,
         yaw = r.previousYaw + angleDelta(r.yaw, r.previousYaw) * alpha;
+      const actionProgress = r.actionTime > 0 ? 1 - r.actionTime / r.actionDuration : 0;
+      const jump =
+        r.actionKind === 'jump' || r.actionKind === 'spin'
+          ? Math.sin(actionProgress * Math.PI) * 2.6
+          : 0;
       kart.root.position.set(
         x,
-        TRACK.height(x, z) + Math.sin(time * 22 + i) * Math.min(0.018, Math.abs(r.speed) * 0.0007),
+        TRACK.height(x, z) +
+          jump +
+          Math.sin(time * 22 + i) * Math.min(0.018, Math.abs(r.speed) * 0.0007),
         z,
       );
-      kart.root.rotation.y = yaw;
+      kart.root.rotation.y =
+        yaw +
+        (r.actionKind === 'spin'
+          ? actionProgress * Math.PI * 2
+          : r.actionKind === 'drift'
+            ? Math.sin(actionProgress * Math.PI) * 0.45
+            : 0);
+      kart.root.rotation.x =
+        r.actionKind === 'jump' ? -Math.sin(actionProgress * Math.PI * 2) * 0.13 : 0;
+      kart.shadow.position.y = 0.018 - jump;
+      (kart.shadow.material as THREE.MeshBasicMaterial).opacity = 0.19 * (1 - jump * 0.17);
       kart.driver.rotation.z = -r.steer * Math.min(0.1, Math.abs(r.speed) * 0.004);
       kart.driver.rotation.x = Math.sin(time * 5 + i) * 0.015;
       kart.head.rotation.y = r.steer * 0.13;
@@ -868,10 +1022,14 @@ export class GameWorld {
         .clone()
         .addScaledVector(forward, -8.1 - (player.boost > 0 ? 0.6 : 0))
         .add(new THREE.Vector3(0, 4.35, 0));
+      const jump =
+        (player.actionKind === 'jump' || player.actionKind === 'spin') && player.actionTime > 0
+          ? Math.sin((1 - player.actionTime / player.actionDuration) * Math.PI) * 0.8
+          : 0;
       target = position
         .clone()
         .addScaledVector(forward, 7)
-        .add(new THREE.Vector3(0, 1.35, 0));
+        .add(new THREE.Vector3(0, 1.35 + jump, 0));
     }
     if (!this.cameraReady) {
       this.camera.position.copy(desired);

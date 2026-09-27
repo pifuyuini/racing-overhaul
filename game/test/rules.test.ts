@@ -10,7 +10,12 @@ import { TRACK, CHECKPOINTS } from '../src/track';
 import { EMPTY_INPUT } from '../src/types';
 import type { Difficulty } from '../src/types';
 import { SaveStore, DEFAULT_SETTINGS } from '../src/storage';
-const config = { characterId: 'panda', difficulty: 'normal', mode: 'race' } as const;
+const config = {
+  characterId: 'panda',
+  difficulty: 'normal',
+  mode: 'race',
+  driving: 'manual',
+} as const;
 const make = () => new RaceSimulation(config);
 describe('track and lap rules', () => {
   it('has a closed continuous route of a playable length', () => {

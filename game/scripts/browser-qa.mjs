@@ -34,6 +34,7 @@ try {
   await page.getByRole('button', { name: '出发，去兜个风' }).waitFor();
   await shot('01-home-1920');
   await page.getByRole('button', { name: '出发，去兜个风' }).click();
+  await page.locator('[data-action="driving"][data-id="manual"]').click();
   await page.locator('[data-action="character"][data-id="fox"]').click();
   check(
     'character selection',

@@ -25,6 +25,7 @@ let config: RaceConfig = {
   characterId: store.data.settings.characterId,
   difficulty: store.data.settings.difficulty,
   mode: 'race',
+  driving: store.data.settings.driving,
 };
 let simulation = new RaceSimulation({ ...config, difficulty: 'normal' });
 simulation.startImmediately();
@@ -39,6 +40,7 @@ const input = new KeyboardInput(() => {
   else if (ui.screen === 'pause') resume();
 });
 const ui = new GameUI(root, store, world.portraits(), {
+  control: (action) => input.trigger(action),
   start: (next) => {
     config = next;
     simulation = new RaceSimulation(config);
@@ -121,7 +123,14 @@ function frame(nowMs: number) {
       simulation.step(FIXED, controls, demo || testAutoDrive);
       accumulator -= FIXED;
       input.consumeActions();
-      controls = { ...controls, item: false, recover: false };
+      controls = {
+        ...controls,
+        item: false,
+        recover: false,
+        lane: null,
+        nitro: false,
+        interact: false,
+      };
     }
     if (demo && simulation.phase === 'finished') {
       simulation = new RaceSimulation({

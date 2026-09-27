@@ -123,11 +123,14 @@ export class GameAudio {
       if (e.type === 'go') {
         this.tone(880, 0.45, 'triangle', 0.3);
       }
+      if (e.type === 'charge' || e.type === 'route') this.tone(988, 0.18, 'sine', 0.18);
+      if (e.type === 'interaction')
+        [659, 880, 1318].forEach((n, i) => this.tone(n, 0.3, 'triangle', 0.2, i * 0.07));
       if (e.type === 'pickup') {
         this.tone(659, 0.12, 'sine', 0.25);
         this.tone(988, 0.2, 'sine', 0.2, 0.08);
       }
-      if (e.type === 'boost' || e.type === 'drift') {
+      if (e.type === 'boost' || e.type === 'drift' || e.type === 'nitro') {
         [392, 523, 784].forEach((n, i) => this.tone(n, 0.18, 'triangle', 0.14, i * 0.045));
       }
       if (e.type === 'hit') this.tone(95, 0.3, 'sawtooth', 0.13);

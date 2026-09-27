@@ -21,6 +21,7 @@ try {
   await page.getByRole('button', { name: '完成', exact: true }).click();
   for (const difficulty of ['easy', 'normal', 'hard']) {
     await page.getByRole('button', { name: '出发，去兜个风' }).click();
+    await page.locator('[data-action="driving"][data-id="manual"]').click();
     await page.locator('[data-action="difficulty"][data-id="' + difficulty + '"]').click();
     await page.getByRole('button', { name: '驶上发车线' }).click();
     await page.waitForFunction(() => window.__PAWPRINT_TEST__?.snapshot().phase === 'racing');

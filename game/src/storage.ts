@@ -1,4 +1,4 @@
-import type { CharacterId, PersonalRecord, Settings, RaceMode } from './types';
+import type { CharacterId, PersonalRecord, Settings, RaceMode, DrivingMode } from './types';
 const KEY = 'pawprint-paradise-v1';
 export const DEFAULT_SETTINGS: Settings = {
   quality: 'medium',
@@ -7,6 +7,7 @@ export const DEFAULT_SETTINGS: Settings = {
   volume: 0.55,
   characterId: 'panda',
   difficulty: 'normal',
+  driving: 'assisted',
 };
 interface SaveData {
   settings: Settings;
@@ -45,19 +46,25 @@ export class SaveStore {
     Object.assign(this.data.settings, settings);
     this.save();
   }
-  recordKey(character: CharacterId, mode: RaceMode) {
-    return mode + ':' + character;
+  recordKey(character: CharacterId, mode: RaceMode, driving: DrivingMode = 'manual') {
+    return (driving === 'assisted' ? 'assisted:' : '') + mode + ':' + character;
   }
-  record(character: CharacterId, mode: RaceMode): PersonalRecord {
-    return this.data.records[this.recordKey(character, mode)] ?? { lap: null, race: null };
+  record(character: CharacterId, mode: RaceMode, driving: DrivingMode = 'manual'): PersonalRecord {
+    return this.data.records[this.recordKey(character, mode, driving)] ?? { lap: null, race: null };
   }
-  updateRecord(character: CharacterId, mode: RaceMode, lap: number, race: number) {
-    const old = this.record(character, mode);
+  updateRecord(
+    character: CharacterId,
+    mode: RaceMode,
+    lap: number,
+    race: number,
+    driving: DrivingMode = 'manual',
+  ) {
+    const old = this.record(character, mode, driving);
     const next = {
       lap: old.lap === null ? lap : Math.min(old.lap, lap),
       race: old.race === null ? race : Math.min(old.race, race),
     };
-    this.data.records[this.recordKey(character, mode)] = next;
+    this.data.records[this.recordKey(character, mode, driving)] = next;
     this.save();
     return { lap: old.lap === null || lap < old.lap, race: old.race === null || race < old.race };
   }

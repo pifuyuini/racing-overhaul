@@ -10,6 +10,9 @@ import type {
   Phase,
   Projectile,
   ItemBox,
+  NitroPickup,
+  RoutePrompt,
+  InteractionPrompt,
 } from './types';
 import {
   TRACK,
@@ -21,6 +24,11 @@ import {
   angleDelta,
   clamp,
   mod,
+  LANE_OFFSETS,
+  ROUTE_GATES,
+  INTERACTIONS,
+  NITRO_PICKUPS,
+  forwardDistance,
 } from './track';
 export function chargeBoost(charge: number) {
   return charge >= 1.8 ? 2.1 : charge >= 0.7 ? 1.1 : 0;
@@ -89,6 +97,12 @@ export class RaceSimulation {
   private seed: number;
   private nextProjectile = 0;
   private countdownBeat = 4;
+  readonly pickups: NitroPickup[] = NITRO_PICKUPS.map((p) => ({ ...p, collectedLap: -1 }));
+  private claimedRoutes = new Set<string>();
+  private claimedActions = new Set<string>();
+  get assisted() {
+    return this.config.driving !== 'manual';
+  }
   constructor(
     readonly config: RaceConfig,
     seed = 20260922,
@@ -138,6 +152,15 @@ export class RaceSimulation {
         offroad: false,
         recovery: 0,
         completedDistance: progress * TRACK.length,
+        targetLane: 0,
+        nitro: 60,
+        nitroTime: 0,
+        actionKind: null,
+        actionTime: 0,
+        actionDuration: 0,
+        perfectActions: 0,
+        successfulActions: 0,
+        nitroUses: 0,
       });
     }
     if (config.mode === 'time') {
@@ -185,6 +208,47 @@ export class RaceSimulation {
       boxes: this.boxes,
       standings: rankRacers(this.racers),
       config: this.config,
+      route: this.routePrompt(),
+      interaction: this.interactionPrompt(),
+      pickups: this.assisted ? this.pickups : [],
+    };
+  }
+  routePrompt(): RoutePrompt | null {
+    if (!this.assisted) return null;
+    const r = this.racers[0];
+    const gate = ROUTE_GATES.find(
+      (g) =>
+        !this.claimedRoutes.has(r.laps + ':' + g.id) &&
+        forwardDistance(r.progress, g.progress) > -3 &&
+        forwardDistance(r.progress, g.progress) < 95,
+    );
+    return gate
+      ? {
+          id: gate.id,
+          distance: forwardDistance(r.progress, gate.progress),
+          left: '氮气 +35',
+          right: this.config.mode === 'time' ? '加速带' : r.item ? '氮气 +20' : '道具补给',
+        }
+      : null;
+  }
+  interactionPrompt(): InteractionPrompt | null {
+    if (!this.assisted) return null;
+    const r = this.racers[0];
+    const point = INTERACTIONS.find(
+      (g) =>
+        !this.claimedActions.has(r.laps + ':' + g.id) &&
+        forwardDistance(r.progress, g.progress) > -22 &&
+        forwardDistance(r.progress, g.progress) < 90,
+    );
+    if (!point) return null;
+    const distance = forwardDistance(r.progress, point.progress);
+    return {
+      id: point.id,
+      kind: point.kind,
+      title: point.title,
+      distance,
+      available: Math.abs(distance) <= 22,
+      perfect: Math.abs(distance) <= 8,
     };
   }
   drainEvents() {
@@ -295,14 +359,135 @@ export class RaceSimulation {
       racer.previousX = racer.x;
       racer.previousZ = racer.z;
       racer.previousYaw = racer.yaw;
-      const controls = racer.id === 0 && !autoPlayer ? input : this.aiInput(racer);
-      this.updateRacer(racer, controls, dt);
+      if (racer.id === 0 && !autoPlayer && this.assisted)
+        this.updateAssistedRacer(racer, input, dt);
+      else {
+        const controls = racer.id === 0 && !autoPlayer ? input : this.aiInput(racer);
+        this.updateRacer(racer, controls, dt);
+      }
     }
     this.resolveCollisions();
     this.updateProjectiles(dt);
     if (this.racers[0].finishTime !== null) {
       this.phase = 'finished';
       this.events.push({ type: 'finish', racerId: 0 });
+    }
+  }
+  private updateAssistedRacer(r: Racer, input: InputState, dt: number) {
+    const spec = CHARACTERS.find((c) => c.id === r.characterId)!;
+    for (const key of [
+      'boost',
+      'shield',
+      'stun',
+      'invulnerable',
+      'itemCooldown',
+      'recovery',
+      'nitroTime',
+      'actionTime',
+    ] as const)
+      r[key] = Math.max(0, r[key] - dt);
+    if (r.actionTime === 0) r.actionKind = null;
+    r.aiThink += dt;
+    r.nitro = Math.min(100, r.nitro + 6 * dt);
+    if (input.lane !== undefined && input.lane !== null) r.targetLane = input.lane;
+    if (input.item) this.useItem(r);
+    if (input.nitro && r.nitro >= 30 && r.nitroTime <= 0.15 && r.stun === 0) {
+      r.nitro -= 30;
+      r.nitroTime = 1.8;
+      r.boost = Math.max(r.boost, 1.8);
+      r.nitroUses++;
+      this.events.push({ type: 'nitro', racerId: 0 });
+    }
+    const prompt = this.interactionPrompt();
+    if (input.interact && prompt?.available && r.stun === 0) {
+      this.claimedActions.add(r.laps + ':' + prompt.id);
+      r.actionKind = prompt.kind;
+      r.actionDuration = prompt.kind === 'drift' ? 1.55 : 1.25;
+      r.actionTime = r.actionDuration;
+      r.successfulActions++;
+      if (prompt.perfect) r.perfectActions++;
+      r.nitro = Math.min(100, r.nitro + (prompt.perfect ? 25 : 14));
+      r.boost = Math.max(r.boost, prompt.perfect ? 2.2 : 1.1);
+      this.events.push({
+        type: 'interaction',
+        racerId: 0,
+        value: (prompt.perfect ? '完美' : '漂亮') + ' · ' + prompt.title,
+      });
+    }
+    if (input.recover && r.recovery === 0) {
+      this.recover(r);
+      r.lane = 0;
+      return;
+    }
+    const previousProgress = r.progress;
+    const projection = TRACK.nearest(r.x, r.z, r.progress);
+    // A guided racing line owns steering. Collisions still slow the kart and displace its lane.
+    const targetOffset = LANE_OFFSETS[r.targetLane + 1];
+    r.lane = clamp(projection.offset, -6.4, 6.4);
+    r.lane += (targetOffset - r.lane) * (1 - Math.exp(-dt * 3.8 * spec.handling));
+    const current = TRACK.at(r.progress);
+    const curve = Math.abs(angleDelta(TRACK.at(r.progress + 25 / TRACK.length).yaw, current.yaw));
+    const cruising = clamp(spec.speed * 0.9 - curve * 11, 16, spec.speed * 0.9);
+    const targetSpeed = cruising + (r.boost > 0 ? 12 : 0);
+    if (r.stun > 0) r.speed = Math.max(5, r.speed * Math.exp(-1.4 * dt));
+    else if (r.speed < targetSpeed)
+      r.speed = Math.min(targetSpeed, r.speed + (spec.acceleration + (r.boost > 0 ? 20 : 0)) * dt);
+    else r.speed = Math.max(targetSpeed, r.speed - 18 * dt);
+    const p = TRACK.at(r.progress + (r.speed * dt) / TRACK.length, r.lane);
+    r.steer = clamp(angleDelta(p.yaw, r.yaw) * 8, -1, 1);
+    r.yaw += angleDelta(p.yaw, r.yaw) * Math.min(1, dt * 12);
+    r.velocityYaw = r.yaw;
+    r.x = p.x;
+    r.z = p.z;
+    r.offroad = false;
+    r.drifting = r.actionKind === 'drift';
+    r.driftCharge = r.drifting ? 2 : 0;
+    const lap = advanceCheckpoints(r, p.progress, Math.abs(r.lane), this.elapsed);
+    if (lap) {
+      this.events.push({ type: 'lap', racerId: 0, value: r.laps });
+      if (r.laps === 3) r.finishTime = this.elapsed;
+    }
+    this.collectTrackSupplies(r, Math.abs(r.lane));
+    if (r.finishTime !== null) return;
+    for (const gate of ROUTE_GATES) {
+      const key = r.laps + ':' + gate.id;
+      if (
+        !this.claimedRoutes.has(key) &&
+        forwardDistance(previousProgress, gate.progress) >= 0 &&
+        forwardDistance(r.progress, gate.progress) <= 0
+      ) {
+        this.claimedRoutes.add(key);
+        if (r.lane < -2) {
+          r.nitro = Math.min(100, r.nitro + 35);
+          this.events.push({ type: 'route', racerId: 0, value: '左线补给 · 氮气 +35' });
+        } else if (r.lane > 2) {
+          if (this.config.mode === 'time') {
+            r.boost = Math.max(r.boost, 1.5);
+            this.events.push({ type: 'route', racerId: 0, value: '右线加速 · 全力冲刺' });
+          } else if (r.item) {
+            r.nitro = Math.min(100, r.nitro + 20);
+            this.events.push({ type: 'route', racerId: 0, value: '补给已满 · 氮气 +20' });
+          } else {
+            const items: ItemType[] = ['boost', 'shield', 'water', 'banana'];
+            r.item = items[Math.floor(this.random() * items.length)];
+            this.events.push({ type: 'pickup', racerId: 0, value: r.item });
+          }
+        } else {
+          r.nitro = Math.min(100, r.nitro + 10);
+          this.events.push({ type: 'route', racerId: 0, value: '稳稳通过 · 氮气 +10' });
+        }
+      }
+    }
+    for (const pickup of this.pickups) {
+      if (pickup.collectedLap === r.laps) continue;
+      if (
+        Math.abs(forwardDistance(r.progress, pickup.progress)) < 2.4 &&
+        Math.abs(r.lane - LANE_OFFSETS[pickup.lane + 1]) < 2
+      ) {
+        pickup.collectedLap = r.laps;
+        r.nitro = Math.min(100, r.nitro + 20);
+        this.events.push({ type: 'charge', racerId: 0, value: 20 });
+      }
     }
   }
   private updateRacer(racer: Racer, input: InputState, dt: number) {
@@ -391,8 +576,11 @@ export class RaceSimulation {
       this.events.push({ type: 'lap', racerId: racer.id, value: racer.laps });
       if (racer.laps === 3 && racer.finishTime === null) racer.finishTime = this.elapsed;
     }
+    this.collectTrackSupplies(racer, next.distance);
+  }
+  private collectTrackSupplies(racer: Racer, distance: number) {
     for (const pad of BOOST_PADS) {
-      if (Math.abs(mod(racer.progress - pad + 0.5) - 0.5) * TRACK.length < 3 && next.distance < 5.2)
+      if (Math.abs(mod(racer.progress - pad + 0.5) - 0.5) * TRACK.length < 3 && distance < 5.2)
         racer.boost = Math.max(racer.boost, 0.85);
     }
     if (!racer.item && racer.itemCooldown === 0 && racer.finishTime === null)
