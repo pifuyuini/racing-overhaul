@@ -45,12 +45,15 @@ export class GameWorld {
   private nextParticle = 0;
   private quality: Quality | null = null;
   private cameraReady = false;
+  private cameraHeading = 0;
+  private cameraTarget = new THREE.Vector3();
   private lastTime = 0;
   private staticRoot = new THREE.Group();
   private flagMeshes: THREE.Mesh[] = [];
   private assistedRoot = new THREE.Group();
   private energyCrystals: THREE.Mesh[] = [];
   private laneArrows: THREE.Mesh[] = [];
+  private interactionRings: THREE.Mesh<THREE.RingGeometry, THREE.MeshBasicMaterial>[] = [];
   constructor(readonly canvas: HTMLCanvasElement) {
     this.renderer = new THREE.WebGLRenderer({
       canvas,
@@ -139,7 +142,7 @@ export class GameWorld {
     this.scene.add(this.assistedRoot);
     for (const gate of ROUTE_GATES) {
       for (const side of [-1, 1]) {
-        const p = TRACK.at(gate.progress, side * 4.6);
+        const p = TRACK.at(gate.progress, LANE_OFFSETS[side + 1]);
         const group = new THREE.Group();
         group.position.set(p.x, p.y, p.z);
         group.rotation.y = p.yaw;
@@ -171,11 +174,18 @@ export class GameWorld {
       for (let j = 0; j < 3; j++) box(group, gold, 0, 0.085, -j * 3, 14 - j, 0.05, 0.35, 0);
       const ring = new THREE.Mesh(
         new THREE.RingGeometry(3.7, 4, 36),
-        new THREE.MeshBasicMaterial({ color: 0xffdc77, side: THREE.DoubleSide }),
+        new THREE.MeshBasicMaterial({
+          color: 0xffdc77,
+          transparent: true,
+          opacity: 0.68,
+          depthWrite: false,
+          side: THREE.DoubleSide,
+        }),
       );
       ring.rotation.x = -Math.PI / 2;
-      ring.position.y = 0.12;
-      group.add(ring);
+      ring.position.set(p.x, p.y + 0.12, p.z);
+      this.assistedRoot.add(ring);
+      this.interactionRings.push(ring);
       for (const side of [-1, 1]) {
         cylinder(group, wood, side * 8, 1.4, 0, 0.1, 0.14, 2.8, 7);
         const sign = this.textPlane('F  ' + point.title, 512, 128, '#164c51', '#ffdc77', 4, 1);
@@ -231,6 +241,14 @@ export class GameWorld {
     this.assistedRoot.visible = visible && snapshot.config.driving !== 'manual';
     if (!this.assistedRoot.visible) return;
     const player = snapshot.racers[0];
+    this.interactionRings.forEach((ring, i) => {
+      const prompt = snapshot.interaction,
+        active = prompt?.id === INTERACTIONS[i].id;
+      const ready = active && prompt.available;
+      ring.material.color.setHex(ready ? (prompt.perfect ? 0xf6ffcf : 0x77ffe1) : 0xffdc77);
+      ring.material.opacity = ready ? 0.88 : active ? 0.76 : 0.52;
+      ring.scale.setScalar(ready ? 1 + Math.sin(time * 8) * 0.035 : 1);
+    });
     this.energyCrystals.forEach((mesh, i) => {
       const pickup = snapshot.pickups[i];
       mesh.visible = !!pickup && pickup.collectedLap !== player.laps;
@@ -432,7 +450,7 @@ export class GameWorld {
       for (let i = -1; i <= 1; i++)
         for (const side of [-1, 1]) {
           const stripe = box(pad, arrowMat, side * 1.13, 0.025, i * 1.4, 2.7, 0.02, 0.33, 0);
-          stripe.rotation.y = side * -0.52;
+          stripe.rotation.y = side * 0.52;
         }
     }
     const start = TRACK.at(0);
@@ -499,6 +517,28 @@ export class GameWorld {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(text, w / 2, h * 0.52, w * 0.93);
+    return this.canvasPlane(canvas, width, height);
+  }
+  private turnSign(direction: number) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 100;
+    const ctx = canvas.getContext('2d')!;
+    ctx.fillStyle = '#e7825d';
+    ctx.fillRect(0, 0, 256, 100);
+    ctx.strokeStyle = '#fff1cd';
+    ctx.lineWidth = 11;
+    ctx.lineCap = ctx.lineJoin = 'round';
+    for (const x of [52, 128, 204]) {
+      ctx.beginPath();
+      ctx.moveTo(x - direction * 15, 23);
+      ctx.lineTo(x + direction * 15, 50);
+      ctx.lineTo(x - direction * 15, 77);
+      ctx.stroke();
+    }
+    return this.canvasPlane(canvas, 3.2, 1.2);
+  }
+  private canvasPlane(canvas: HTMLCanvasElement, width: number, height: number) {
     const texture = new THREE.CanvasTexture(canvas);
     texture.colorSpace = THREE.SRGBColorSpace;
     return new THREE.Mesh(
@@ -739,7 +779,8 @@ export class GameWorld {
     }
     for (const progress of [0.12, 0.31, 0.49, 0.62, 0.79, 0.91]) {
       const p = TRACK.at(progress, -11),
-        sign = this.textPlane('› › ›', 256, 100, '#fff1cd', '#e7825d', 3.2, 1.2);
+        bend = angleDelta(TRACK.at(progress + 0.025).yaw, p.yaw),
+        sign = this.turnSign(bend > 0 ? -1 : 1);
       sign.position.set(p.x, p.y + 1.55, p.z);
       sign.rotation.y = p.yaw + Math.PI;
       this.staticRoot.add(sign);
@@ -821,17 +862,17 @@ export class GameWorld {
     const oldSize = this.renderer.getSize(new THREE.Vector2()),
       oldPixel = this.renderer.getPixelRatio(),
       scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xf4e8c9);
+    scene.background = new THREE.Color(0xdcece8);
     scene.add(new THREE.HemisphereLight(0xeafaff, 0xc9a078, 3));
     const light = new THREE.DirectionalLight(0xfff1d7, 4);
     light.position.set(4, 7, 5);
     scene.add(light);
-    const cam = new THREE.PerspectiveCamera(35, 1, 0.1, 30);
-    cam.position.set(4.4, 3.6, 6.8);
-    cam.lookAt(0, 1.4, 0);
+    const cam = new THREE.PerspectiveCamera(35, 2, 0.1, 30);
+    cam.position.set(1.15, 2.55, 2.9);
+    cam.lookAt(0, 2.0, -0.15);
     const result = {} as Record<CharacterId, string>;
     this.renderer.setPixelRatio(1);
-    this.renderer.setSize(256, 256, false);
+    this.renderer.setSize(512, 256, false);
     for (const id of ['panda', 'capybara', 'fox', 'penguin'] as CharacterId[]) {
       const kart = createKart(id);
       scene.add(kart.root);
@@ -881,8 +922,16 @@ export class GameWorld {
           : r.actionKind === 'drift'
             ? Math.sin(actionProgress * Math.PI) * 0.45
             : 0);
+      const moving = Math.min(1, Math.abs(r.speed) / 20),
+        hitReaction = Math.min(1, r.stun / 0.3);
       kart.root.rotation.x =
-        r.actionKind === 'jump' ? -Math.sin(actionProgress * Math.PI * 2) * 0.13 : 0;
+        r.actionKind === 'jump'
+          ? -Math.sin(actionProgress * Math.PI * 2) * 0.13
+          : r.boost > 0
+            ? -0.018 * moving
+            : 0;
+      kart.root.rotation.z =
+        -r.steer * moving * 0.035 + Math.sin(time * 24 + i) * hitReaction * 0.025;
       kart.shadow.position.y = 0.018 - jump;
       (kart.shadow.material as THREE.MeshBasicMaterial).opacity = 0.19 * (1 - jump * 0.17);
       kart.driver.rotation.z = -r.steer * Math.min(0.1, Math.abs(r.speed) * 0.004);
@@ -992,9 +1041,22 @@ export class GameWorld {
       this.flagMeshes[i].rotation.x = Math.sin(time * 2 + i * 0.7) * 0.12;
     this.updateParticles(dt);
     const player = snapshot.racers[0],
-      position = new THREE.Vector3(player.x, TRACK.height(player.x, player.z), player.z),
-      forward = new THREE.Vector3(Math.sin(player.yaw), 0, Math.cos(player.yaw)),
-      right = new THREE.Vector3(Math.cos(player.yaw), 0, -Math.sin(player.yaw));
+      playerX = player.previousX + (player.x - player.previousX) * alpha,
+      playerZ = player.previousZ + (player.z - player.previousZ) * alpha,
+      position = new THREE.Vector3(playerX, TRACK.height(playerX, playerZ), playerZ),
+      viewYaw =
+        mode === 'race' && snapshot.config.driving !== 'manual'
+          ? TRACK.at(player.progress).yaw
+          : player.yaw;
+    this.cameraHeading = this.cameraReady
+      ? this.cameraHeading + angleDelta(viewYaw, this.cameraHeading) * (1 - Math.exp(-dt * 7))
+      : viewYaw;
+    const forward = new THREE.Vector3(
+        Math.sin(this.cameraHeading),
+        0,
+        Math.cos(this.cameraHeading),
+      ),
+      left = new THREE.Vector3(Math.cos(this.cameraHeading), 0, -Math.sin(this.cameraHeading));
     let desired: THREE.Vector3, target: THREE.Vector3;
     if (mode === 'menu') {
       const p = TRACK.at(player.progress),
@@ -1014,7 +1076,7 @@ export class GameWorld {
       desired = position
         .clone()
         .addScaledVector(forward, 7.8)
-        .addScaledVector(right, 5)
+        .addScaledVector(left, 5)
         .add(new THREE.Vector3(0, 4, 0));
       target = position.clone().add(new THREE.Vector3(0, 1.3, 0));
     } else {
@@ -1033,9 +1095,13 @@ export class GameWorld {
     }
     if (!this.cameraReady) {
       this.camera.position.copy(desired);
+      this.cameraTarget.copy(target);
       this.cameraReady = true;
-    } else this.camera.position.lerp(desired, 1 - Math.exp(-dt * (mode === 'race' ? 8 : 2.5)));
-    this.camera.lookAt(target);
+    } else {
+      this.camera.position.lerp(desired, 1 - Math.exp(-dt * (mode === 'race' ? 8 : 2.5)));
+      this.cameraTarget.lerp(target, 1 - Math.exp(-dt * (mode === 'race' ? 10 : 3)));
+    }
+    this.camera.lookAt(this.cameraTarget);
     const fov =
       mode === 'race' ? 58 + (Math.abs(player.speed) / 40) * 5 + (player.boost > 0 ? 5 : 0) : 48;
     this.camera.fov += (fov - this.camera.fov) * Math.min(1, dt * 4);

@@ -45,9 +45,56 @@ button {
   border: 0;
 }
 button svg {
-  width: 29px;
-  height: 23px;
+  width: 24px;
+  height: 24px;
   flex-shrink: 0;
+}
+.ui-icon {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+.direction-key {
+  padding: 3px 5px;
+  min-width: 27px;
+}
+.direction-key .ui-icon {
+  width: 15px;
+  height: 15px;
+}
+.key-strip > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.spark .ui-icon {
+  width: 18px;
+  height: 18px;
+}
+.hero-star .ui-icon {
+  width: 1em;
+  height: 1em;
+}
+.selected-mark .ui-icon {
+  width: 15px;
+  height: 15px;
+}
+.record-badge .ui-icon {
+  width: 15px;
+  height: 15px;
 }
 #world {
   position: fixed;
@@ -141,6 +188,9 @@ button:active {
   gap: 12px;
 }
 .utility {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   color: var(--cream);
   background: #173e4d33;
   border: 1px solid #fff3d638;
@@ -348,6 +398,9 @@ button:active {
   letter-spacing: 2px;
 }
 .text-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   background: none;
   color: inherit;
   font-size: 13px;
@@ -415,8 +468,9 @@ button:active {
   display: block;
   width: 100%;
   height: 154px;
-  object-fit: cover;
-  mix-blend-mode: multiply;
+  object-fit: contain;
+  object-position: center;
+  background: #dcece8;
 }
 .character-card.selected {
   border-color: #319c91;
@@ -574,6 +628,10 @@ button:active {
   padding: 2px 5px;
   min-width: 24px;
   color: #3a7069;
+}
+.help-key-action {
+  display: inline-block;
+  white-space: nowrap;
 }
 .help-note {
   font-size: 12px;
@@ -944,8 +1002,8 @@ button:active {
   display: block;
   width: 100%;
   height: 220px;
-  object-fit: cover;
-  mix-blend-mode: multiply;
+  object-fit: contain;
+  background: #dcece8;
 }
 .result-place {
   position: absolute;
@@ -1585,29 +1643,19 @@ button:active {
 .driving-choice .segmented {
   background: #d2e1d1;
 }
+.driving-choice .segmented button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+.driving-choice .ui-icon {
+  width: 19px;
+  height: 19px;
+}
 .assisted-hud .item-widget,
 .assisted-hud .drift-meter {
   display: none;
-}
-.assist-badge {
-  position: absolute;
-  top: 146px;
-  left: 35px;
-  padding: 12px 16px;
-  color: #a7ffe8;
-  border: 1px solid #9eebd73d;
-  background: #123f48bd;
-  border-radius: 14px;
-  backdrop-filter: blur(8px);
-  font-size: 13px;
-  font-weight: 800;
-}
-.assist-badge span {
-  display: block;
-  margin-top: 5px;
-  font-size: 11px;
-  font-weight: 400;
-  color: #eff5d7;
 }
 .drive-dock {
   position: absolute;
@@ -1636,12 +1684,21 @@ button:active {
   color: #fff1d0;
   font-size: 28px;
   font-weight: 700;
-  min-height: 72px;
+  min-height: 64px;
 }
 .lane-controls small {
   display: block;
   font-size: 10px;
   margin-top: 3px;
+}
+.lane-controls small span {
+  margin-left: 3px;
+  opacity: 0.6;
+  font-size: 9px;
+}
+.lane-controls .ui-icon {
+  width: 22px;
+  height: 22px;
 }
 .lane-controls button.chosen {
   background: #7bead2;
@@ -1649,7 +1706,7 @@ button:active {
   box-shadow: inset 0 -3px 0 #339d98;
 }
 .nitro-control {
-  min-width: 242px;
+  min-width: 224px;
   padding: 10px 15px;
   border-radius: 14px;
   background: #ffdc73;
@@ -1663,7 +1720,7 @@ button:active {
   gap: 10px;
 }
 .nitro-control strong {
-  font-size: 16px;
+  font-size: 14px;
 }
 .nitro-control b {
   margin-left: auto;
@@ -1704,9 +1761,10 @@ button:active {
   color: #144c4f;
 }
 .item-control {
+  max-width: 165px;
   border: 1px solid #ffdb657d;
   border-radius: 14px;
-  min-width: 105px;
+  min-width: 144px;
   padding: 10px 13px;
   background: #fff0c6;
   color: #143f49;
@@ -1718,7 +1776,29 @@ button:active {
 .item-control strong {
   display: block;
   font-size: 12px;
-  margin-top: 6px;
+  margin-top: 4px;
+}
+.dock-item-top {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+}
+.dock-item-top .ui-icon {
+  width: 19px;
+  height: 19px;
+}
+.item-control > small {
+  display: block;
+  font-size: 9px;
+  margin-top: 4px;
+  line-height: 1.4;
+}
+.item-control:disabled:hover,
+.nitro-control:disabled:hover,
+.interaction-panel button:disabled:hover,
+.lane-controls button:disabled:hover {
+  transform: none;
 }
 .item-control:disabled {
   background: #eef4d61a;
@@ -1726,58 +1806,92 @@ button:active {
   color: #e5eccca6;
 }
 .assisted-hud .race-tip {
-  bottom: 137px;
-  font-size: 12px;
+  display: none;
 }
 .assisted-hud .race-message {
-  top: 115px;
-  letter-spacing: 1px;
-  padding: 10px 18px;
+  top: 106px;
+  font-size: 15px;
+  letter-spacing: 0.5px;
+  padding: 8px 13px;
   border-radius: 12px;
-  background: #173f49a8;
+  background: #173f49d9;
 }
 .assisted-hud .race-message:empty {
   display: none;
 }
 .assisted-hud #drift-label {
-  max-width: 200px;
-  font-size: 11px;
-  line-height: 1.6;
+  display: none;
+}
+.assisted-hud .map-widget {
+  width: 170px;
+  height: 148px;
+  padding: 12px 8px 0;
+  border-radius: 18px;
+  transform: none;
+}
+.assisted-hud .map-widget canvas {
+  width: 152px;
+  height: 127px;
+}
+.assisted-hud .speed-widget {
+  min-width: 130px;
+}
+.assisted-hud .speed-widget strong {
+  font-size: 52px;
+}
+.item-icon .ui-icon {
+  width: 28px;
+  height: 28px;
 }
 .route-panel,
 .interaction-panel {
   position: absolute;
-  top: 165px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 340px;
-  border-radius: 19px;
-  background: #123d49da;
+  top: 132px;
+  left: 30px;
+  width: 230px;
+  border-radius: 16px;
+  background: #123d49eb;
   border: 1px solid #d3ffee7d;
-  padding: 15px;
+  padding: 12px;
   text-shadow: none;
   box-shadow: 0 8px 28px #12435133;
 }
 .route-panel p,
 .interaction-panel p {
-  font-size: 13px;
-  letter-spacing: 1px;
+  font-size: 12px;
   font-weight: 800;
-  text-align: center;
-  margin-bottom: 11px;
+}
+.route-panel p {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 9px;
+}
+.route-panel p span {
+  color: #bee7d8;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
 }
 .route-panel > div {
   display: flex;
   gap: 9px;
 }
 .route-panel button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
   flex: 1;
-  min-height: 47px;
+  min-height: 42px;
   border-radius: 10px;
   color: #c5ffea;
   background: #69ecd525;
   border: 1px solid #84ead655;
   font-size: 12px;
+}
+.route-panel .ui-icon {
+  width: 17px;
+  height: 17px;
 }
 .route-panel button:last-child {
   background: #ffba8230;
@@ -1788,14 +1902,53 @@ button:active {
   box-shadow: inset 0 0 0 2px currentColor;
 }
 .interaction-panel {
+  left: auto;
+  right: 30px;
+  width: 250px;
   border-color: #ffe89161;
+}
+.interaction-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 9px;
+}
+#interaction-state {
+  color: #a9cbbd;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.interaction-panel.available #interaction-state {
+  color: #a4f3d8;
+}
+.interaction-panel.perfect #interaction-state {
+  color: #ffe385;
+}
+.interaction-panel > small {
+  display: block;
+  margin-top: 7px;
+  font-size: 10px;
+  text-align: center;
+  color: #cadcc6;
+  line-height: 1.5;
+}
+.interaction-panel.missed {
+  border-color: #e9b99b66;
+}
+.interaction-panel.missed #interaction-state {
+  color: #f3c3a0;
+}
+.interaction-panel.missed .timing-rail,
+.interaction-panel.missed button {
+  display: none;
 }
 .timing-rail {
   height: 8px;
   border-radius: 10px;
   background: #719285;
   position: relative;
-  margin: 17px 0;
+  margin: 15px 3px;
 }
 .timing-rail span {
   position: absolute;
@@ -1818,7 +1971,7 @@ button:active {
 }
 .interaction-panel button {
   width: 100%;
-  min-height: 47px;
+  min-height: 40px;
   border-radius: 10px;
   display: flex;
   align-items: center;
@@ -1862,19 +2015,49 @@ button:active {
 }
 @media (min-width: 701px) and (max-height: 850px) {
   .setup-panel {
-    padding: 22px 30px;
+    padding: 18px 28px;
+  }
+  .setup-panel h2 {
+    font-size: 25px;
   }
   .setup-panel .character-grid {
-    margin-top: 15px;
+    margin-top: 12px;
   }
   .setup-panel .character-card img {
-    height: 115px;
+    height: clamp(94px, 14vh, 115px);
+  }
+  .setup-panel .character-name {
+    padding: 8px 13px;
+    font-size: 17px;
   }
   .setup-panel .driver-detail {
-    padding: 15px 0;
+    padding: 12px 0;
+  }
+  .setup-panel .race-options {
+    margin-top: 12px;
+  }
+  .setup-panel .race-options legend {
+    margin-bottom: 6px;
+  }
+  .setup-panel .segmented button {
+    padding: 8px 12px;
+  }
+  .setup-panel .option-help {
+    margin-top: 6px;
+  }
+  .setup-panel .driving-choice {
+    margin-top: 12px;
+    padding: 10px 13px;
+  }
+  .setup-panel .driving-choice p {
+    margin-top: 3px;
   }
   .setup-panel .setup-footer {
-    margin-top: 18px;
+    margin-top: 14px;
+  }
+  .setup-panel .setup-footer .primary {
+    padding: 14px 22px;
+    font-size: 16px;
   }
   .hero {
     top: 20%;
@@ -1886,20 +2069,17 @@ button:active {
 }
 @media (max-width: 1100px) {
   .assisted-hud .map-widget {
-    bottom: 144px;
-    transform: scale(0.74);
+    bottom: 127px;
+    transform: scale(0.8);
     transform-origin: bottom left;
   }
   .assisted-hud .speed-widget {
-    bottom: 147px;
+    bottom: 138px;
     right: 24px;
-    min-width: 160px;
+    min-width: 110px;
   }
   .assisted-hud .speed-widget strong {
-    font-size: 50px;
-  }
-  .assisted-hud #drift-label {
-    max-width: 160px;
+    font-size: 44px;
   }
 }
 @media (max-width: 700px) {
@@ -1955,15 +2135,6 @@ button:active {
     padding: 10px;
     font-size: 12px;
   }
-  .assist-badge {
-    top: 97px;
-    left: 16px;
-    padding: 8px;
-    font-size: 10px;
-  }
-  .assist-badge span {
-    display: none;
-  }
   .drive-dock {
     bottom: 15px;
     gap: 6px;
@@ -1973,9 +2144,15 @@ button:active {
     width: 540px;
   }
   .lane-controls button {
-    width: 38px;
-    font-size: 22px;
-    min-height: 66px;
+    width: 34px;
+    min-height: 62px;
+  }
+  .lane-controls .ui-icon {
+    width: 19px;
+    height: 19px;
+  }
+  .lane-controls small span {
+    display: none;
   }
   .nitro-control {
     min-width: 0;
@@ -1983,7 +2160,7 @@ button:active {
     flex: 1;
   }
   .nitro-control strong {
-    font-size: 12px;
+    font-size: 11px;
     white-space: nowrap;
   }
   .nitro-control > span {
@@ -1996,8 +2173,12 @@ button:active {
     display: none;
   }
   .item-control {
-    min-width: 72px;
+    min-width: 87px;
+    max-width: 112px;
     padding: 8px;
+  }
+  .item-control > small {
+    font-size: 8px;
   }
   .item-control strong {
     font-size: 10px;
@@ -2021,13 +2202,48 @@ button:active {
   }
   .route-panel,
   .interaction-panel {
-    top: 170px;
-    width: 290px;
-    padding: 12px;
+    top: 119px;
+    padding: 10px;
+    border-radius: 13px;
+  }
+  .route-panel {
+    left: 12px;
+    width: min(43%, 175px);
+  }
+  .route-panel > div {
+    gap: 5px;
+  }
+  .route-panel button {
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+    min-height: 44px;
+    font-size: 10px;
+  }
+  .route-panel .ui-icon {
+    width: 13px;
+    height: 13px;
+  }
+  .interaction-panel {
+    right: 12px;
+    width: min(48%, 190px);
+  }
+  .interaction-panel p {
+    font-size: 11px;
+  }
+  .interaction-panel > small {
+    font-size: 9px;
+  }
+  .interaction-panel button {
+    gap: 9px;
+    min-height: 36px;
+  }
+  .interaction-panel strong {
+    font-size: 11px;
   }
   .assisted-hud .race-message {
-    top: 139px;
-    font-size: 12px;
+    top: 91px;
+    font-size: 11px;
     padding: 7px 10px;
   }
   .assisted-hud .countdown {
@@ -2038,5 +2254,50 @@ button:active {
   .assisted-hud::before,
   .nitro-meter i {
     transition: none;
+  }
+}
+
+@media (max-width: 700px), (max-height: 620px) {
+  .screen-setup .overlay {
+    align-items: flex-start;
+  }
+  .screen-setup .setup-footer {
+    position: sticky;
+    bottom: -21px;
+    z-index: 2;
+    background: #fff8e9;
+    margin: 14px -5px -5px;
+    padding: 12px 5px 5px;
+    box-shadow: 0 -9px 12px #fff8e9;
+  }
+  .driving-choice .segmented button {
+    white-space: normal;
+  }
+}
+@media (max-height: 560px) and (min-width: 701px) {
+  .assisted-hud .position-widget {
+    top: 15px;
+  }
+  .assisted-hud .position-widget strong {
+    font-size: 51px;
+  }
+  .assisted-hud .interaction-panel,
+  .assisted-hud .route-panel {
+    top: 110px;
+    width: 215px;
+  }
+  .assisted-hud .map-widget {
+    transform: scale(0.6);
+    bottom: 20px;
+  }
+  .assisted-hud .speed-widget {
+    bottom: 30px;
+  }
+  .assisted-hud .drive-dock {
+    bottom: 15px;
+  }
+  .assisted-hud .race-message {
+    top: 80px;
+    font-size: 12px;
   }
 }

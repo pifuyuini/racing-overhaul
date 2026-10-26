@@ -86,10 +86,10 @@ try {
   await page.waitForFunction(() => window.__PAWPRINT_TEST__.snapshot().racers[0].speed > 15);
   check('accelerates without W', (await get()).time > 0);
   await page.keyboard.press('ArrowRight');
-  await page.waitForFunction(() => window.__PAWPRINT_TEST__.snapshot().racers[0].lane > 4);
+  await page.waitForFunction(() => window.__PAWPRINT_TEST__.snapshot().racers[0].lane < -4);
   check('one keyboard press selects and keeps a lane', (await get()).lane === 1);
   await page.locator('.lane-controls [data-action="drive-left"]').click();
-  await page.waitForFunction(() => window.__PAWPRINT_TEST__.snapshot().racers[0].lane < -4);
+  await page.waitForFunction(() => window.__PAWPRINT_TEST__.snapshot().racers[0].lane > 4);
   check('mouse route controls drive the same system', (await get()).lane === -1);
   await page.keyboard.press('Space');
   await page.waitForFunction(() => window.__PAWPRINT_TEST__.snapshot().racers[0].nitroUses === 1);
@@ -135,14 +135,14 @@ try {
     {},
     { polling: 20, timeout: 30000 },
   );
-  await page.locator('#interaction-hint').filter({ hasText: '已过最佳点' }).waitFor();
+  await page.locator('#interaction-detail').filter({ hasText: '窗口即将关闭' }).waitFor();
   checks.push('late interaction asks for immediate action instead of getting closer');
   await page.evaluate(() => {
     const r = window.__PAWPRINT_TEST__.snapshot().racers[0];
     r.stun = 2;
     r.speed = 5;
   });
-  await page.locator('#interaction-hint').filter({ hasText: '受击恢复中' }).waitFor();
+  await page.locator('#interaction-state').filter({ hasText: '恢复中' }).waitFor();
   check(
     'stun disables unavailable nitro and interactions',
     (await page.locator('[data-action="nitro"]').isDisabled()) &&

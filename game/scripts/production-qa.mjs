@@ -25,7 +25,8 @@ try {
   await page.getByRole('button', { name: '驶上发车线' }).click();
   await page.locator('#countdown').filter({ hasText: 'GO!' }).waitFor();
   await page.waitForFunction(() => Number(document.querySelector('#speed').textContent) > 60);
-  assert.equal(await page.locator('.assist-badge').isVisible(), true);
+  assert.equal(await page.locator('.lane-controls').isVisible(), true);
+  assert.equal(await page.locator('.nitro-control').isVisible(), true);
   await page.keyboard.press('ArrowRight');
   await page.waitForFunction(
     () =>

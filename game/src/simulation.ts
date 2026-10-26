@@ -458,10 +458,11 @@ export class RaceSimulation {
         forwardDistance(r.progress, gate.progress) <= 0
       ) {
         this.claimedRoutes.add(key);
-        if (r.lane < -2) {
+        const leftwardOffset = r.lane * Math.sign(LANE_OFFSETS[0]);
+        if (leftwardOffset > 2) {
           r.nitro = Math.min(100, r.nitro + 35);
           this.events.push({ type: 'route', racerId: 0, value: '左线补给 · 氮气 +35' });
-        } else if (r.lane > 2) {
+        } else if (leftwardOffset < -2) {
           if (this.config.mode === 'time') {
             r.boost = Math.max(r.boost, 1.5);
             this.events.push({ type: 'route', racerId: 0, value: '右线加速 · 全力冲刺' });
@@ -556,7 +557,8 @@ export class RaceSimulation {
       (racer.speed / (12 + Math.abs(racer.speed))) *
       (drifting ? 1.19 : 1) *
       dt;
-    const targetVelocityYaw = racer.yaw - (drifting ? racer.driftDirection * 0.21 : 0);
+    // Slow velocity response creates drift slip without an opposite turn on entry.
+    const targetVelocityYaw = racer.yaw;
     racer.velocityYaw +=
       angleDelta(targetVelocityYaw, racer.velocityYaw) * Math.min(1, dt * (drifting ? 3.3 : 12));
     racer.x += Math.sin(racer.velocityYaw) * racer.speed * dt;

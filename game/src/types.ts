@@ -97,10 +97,10 @@ export const CHARACTERS: Character[] = [
   },
 ];
 export const ITEM_INFO: Record<ItemType, { name: string; icon: string; description: string }> = {
-  boost: { name: '加速果汁', icon: '↗', description: '一口热带能量，短时冲刺' },
-  shield: { name: '泡泡护盾', icon: '◉', description: '挡住一次攻击，持续 6 秒' },
-  water: { name: '前向水球', icon: '●', description: '向前发射，命中对手使其减速' },
-  banana: { name: '香蕉皮', icon: '⌁', description: '留在身后，让追兵打个滑' },
+  boost: { name: '加速果汁', icon: 'boost', description: '一口热带能量，短时冲刺' },
+  shield: { name: '泡泡护盾', icon: 'shield', description: '挡住一次攻击，持续 6 秒' },
+  water: { name: '前向水球', icon: 'water', description: '向前发射，命中对手使其减速' },
+  banana: { name: '香蕉皮', icon: 'banana', description: '留在身后，让追兵打个滑' },
 };
 export interface Racer {
   id: number;

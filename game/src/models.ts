@@ -6,6 +6,9 @@ import type { CharacterId } from './types';
 export const material = (color: number, roughness = 0.75) =>
   new THREE.MeshStandardMaterial({ color, roughness, metalness: 0.03 });
 const sphere = new THREE.SphereGeometry(1, 20, 14);
+// Character surfaces get a smoother silhouette without increasing scenery geometry.
+const characterSphere = new THREE.SphereGeometry(1, 28, 20);
+const detailSphere = new THREE.SphereGeometry(1, 16, 12);
 export function ellipsoid(
   parent: THREE.Object3D,
   mat: THREE.Material,
@@ -187,118 +190,408 @@ export function createKart(characterId: CharacterId, variant = 0): KartModel {
   const head = new THREE.Group();
   head.position.set(0, 1.04, 0.02);
   driver.add(head);
-  const black = material(0x28313c),
-    white = material(0xfff5df),
-    pink = material(0xeeaa97),
-    brown = material(
-      characterId === 'capybara' ? 0xb88759 : characterId === 'fox' ? 0xdb7c36 : 0xb66843,
+  const white = material(0xfff2d8, 0.68),
+    black = new THREE.MeshStandardMaterial({ color: 0x252d35, roughness: 0.16, metalness: 0 }),
+    glint = new THREE.MeshBasicMaterial({ color: 0xfffdf4 }),
+    pink = material(0xd99582, 0.8),
+    fur = material(
+      characterId === 'capybara'
+        ? 0xb98a5d
+        : characterId === 'fox'
+          ? 0xd87936
+          : characterId === 'penguin'
+            ? 0x344b60
+            : 0xb9653e,
+      0.72,
+    ),
+    deepFur = material(characterId === 'panda' ? 0x644131 : 0x9b663f, 0.76),
+    tan = material(0xcfa57b, 0.76);
+  const sculptGeometries = new Set<THREE.BufferGeometry>();
+  const sculpt = (
+    parent: THREE.Object3D,
+    mat: THREE.Material,
+    x: number,
+    y: number,
+    z: number,
+    sx: number,
+    sy: number,
+    sz: number,
+  ) => {
+    const size = Math.max(sx, sy, sz);
+    const geometry = size < 0.18 ? detailSphere : size < 0.36 ? sphere : characterSphere;
+    const mesh = new THREE.Mesh(geometry, mat);
+    mesh.position.set(x, y, z);
+    mesh.scale.set(sx, sy, sz);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    parent.add(mesh);
+    return mesh;
+  };
+  const stroke = (
+    parent: THREE.Object3D,
+    points: number[][],
+    radius = 0.009,
+    mat: THREE.Material = black,
+  ) => {
+    const curve = new THREE.CatmullRomCurve3(
+      points.map((point) => new THREE.Vector3(...(point as [number, number, number]))),
     );
-  const fur = characterId === 'penguin' ? material(0x3b5167) : brown;
+    const geometry = new THREE.TubeGeometry(curve, 12, radius, 5, false);
+    sculptGeometries.add(geometry);
+    const mesh = new THREE.Mesh(geometry, mat);
+    parent.add(mesh);
+    return mesh;
+  };
+  const limb = (
+    parent: THREE.Object3D,
+    mat: THREE.Material,
+    a: number[],
+    b: number[],
+    width: number,
+    depth = width,
+  ) => {
+    const from = new THREE.Vector3(...(a as [number, number, number])),
+      to = new THREE.Vector3(...(b as [number, number, number])),
+      direction = to.clone().sub(from),
+      center = from.add(to).multiplyScalar(0.5);
+    const mesh = sculpt(
+      parent,
+      mat,
+      center.x,
+      center.y,
+      center.z,
+      width,
+      direction.length() / 2 + width * 0.45,
+      depth,
+    );
+    mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.normalize());
+    return mesh;
+  };
+  const eyes = (x: number, y: number, z: number, size = 1) => {
+    for (const side of [-1, 1]) {
+      sculpt(head, black, side * x, y, z, 0.052 * size, 0.069 * size, 0.03);
+      sculpt(
+        head,
+        glint,
+        side * x - 0.014 * size,
+        y + 0.025 * size,
+        z + 0.026,
+        0.014 * size,
+        0.018 * size,
+        0.008,
+      );
+      sculpt(
+        head,
+        glint,
+        side * x + 0.015 * size,
+        y - 0.019 * size,
+        z + 0.028,
+        0.0055 * size,
+        0.007 * size,
+        0.004,
+      );
+    }
+  };
+  const pointedEar = (x: number, tilt: number) => {
+    const earShape = new THREE.Shape();
+    earShape.moveTo(-0.22, -0.13);
+    earShape.quadraticCurveTo(-0.23, 0.02, -0.085, 0.39);
+    earShape.quadraticCurveTo(0, 0.56, 0.085, 0.39);
+    earShape.quadraticCurveTo(0.23, 0.02, 0.22, -0.13);
+    earShape.quadraticCurveTo(0, -0.2, -0.22, -0.13);
+    const geometry = new THREE.ExtrudeGeometry(earShape, {
+      depth: 0.1,
+      bevelEnabled: true,
+      bevelThickness: 0.05,
+      bevelSize: 0.045,
+      bevelSegments: 4,
+      curveSegments: 10,
+      steps: 1,
+    });
+    sculptGeometries.add(geometry);
+    const ear = new THREE.Group();
+    ear.position.set(x, 0.44, -0.08);
+    ear.rotation.z = tilt;
+    head.add(ear);
+    const outer = new THREE.Mesh(geometry, fur);
+    outer.castShadow = true;
+    ear.add(outer);
+    const inner = new THREE.Mesh(geometry, pink);
+    inner.scale.set(0.58, 0.63, 0.19);
+    inner.position.set(0, 0.065, 0.112);
+    ear.add(inner);
+  };
+  const tail = (isPanda: boolean) => {
+    const curve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(0.36, 0.22, -0.22),
+      new THREE.Vector3(0.73, 0.24, -0.53),
+      new THREE.Vector3(0.98, 0.46, -0.83),
+      new THREE.Vector3(1.02, 0.73, -1.01),
+      new THREE.Vector3(0.89, 0.94, -1.0),
+    ]);
+    const segments = 40,
+      radial = 20,
+      frames = curve.computeFrenetFrames(segments, false),
+      positions: number[] = [],
+      normals: number[] = [],
+      colors: number[] = [],
+      indices: number[] = [];
+    const baseColor = new THREE.Color(isPanda ? 0xc47a47 : 0xd87936),
+      stripeColor = new THREE.Color(0x704632),
+      tipColor = new THREE.Color(0xfff2d8);
+    for (let ring = 0; ring <= segments; ring++) {
+      const t = ring / segments,
+        center = curve.getPointAt(t),
+        radius = (isPanda ? 0.235 : 0.29) * Math.pow(Math.sin(Math.PI * (t * 0.91 + 0.045)), 0.43),
+        color = isPanda
+          ? Math.floor(t * 8) % 2
+            ? stripeColor
+            : baseColor
+          : t > 0.69
+            ? tipColor
+            : baseColor;
+      for (let side = 0; side <= radial; side++) {
+        const angle = (side / radial) * Math.PI * 2,
+          normal = frames.normals[ring]
+            .clone()
+            .multiplyScalar(Math.cos(angle))
+            .addScaledVector(frames.binormals[ring], Math.sin(angle)),
+          point = center.clone().addScaledVector(normal, ring === segments ? 0.012 : radius);
+        positions.push(point.x, point.y, point.z);
+        normals.push(normal.x, normal.y, normal.z);
+        colors.push(color.r, color.g, color.b);
+        if (ring < segments && side < radial) {
+          const a = ring * (radial + 1) + side,
+            b = a + radial + 1;
+          indices.push(a, a + 1, b, b, a + 1, b + 1);
+        }
+      }
+    }
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
+    geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+    geometry.setIndex(indices);
+    sculptGeometries.add(geometry);
+    const mesh = new THREE.Mesh(
+      geometry,
+      new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.75, metalness: 0 }),
+    );
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    driverBody.add(mesh);
+  };
   const driverBody = new THREE.Group();
   driver.add(driverBody);
-  ellipsoid(driverBody, fur, 0, 0.34, 0, 0.51, 0.58, 0.45);
-  ellipsoid(driverBody, white, 0, 0.32, 0.345, 0.35, 0.43, 0.145);
-  for (const x of [-0.4, 0.4]) {
-    const arm = ellipsoid(driverBody, fur, x, 0.48, 0.34, 0.18, 0.36, 0.17);
-    arm.rotation.x = -0.6;
-    arm.rotation.z = x > 0 ? 0.3 : -0.3;
-    ellipsoid(
+  const isPenguin = characterId === 'penguin';
+  sculpt(driverBody, fur, 0, 0.35, -0.035, isPenguin ? 0.52 : 0.49, isPenguin ? 0.65 : 0.57, 0.41);
+  if (isPenguin) sculpt(driverBody, white, 0, 0.29, 0.318, 0.35, 0.49, 0.13);
+  else if (characterId === 'fox') sculpt(driverBody, white, 0, 0.53, 0.3, 0.29, 0.3, 0.1);
+  else if (characterId === 'panda') sculpt(driverBody, deepFur, 0, 0.2, 0.24, 0.37, 0.37, 0.15);
+  for (const side of [-1, 1]) {
+    if (isPenguin) {
+      const flipper = limb(
+        driverBody,
+        fur,
+        [side * 0.42, 0.6, 0.05],
+        [side * 0.32, 0.46, 0.88],
+        0.13,
+        0.18,
+      );
+      flipper.rotation.z += side * 0.1;
+    } else {
+      limb(driverBody, fur, [side * 0.39, 0.59, 0.04], [side * 0.46, 0.35, 0.41], 0.145);
+      limb(
+        driverBody,
+        characterId === 'panda' ? deepFur : fur,
+        [side * 0.46, 0.35, 0.41],
+        [side * 0.3, 0.46, 0.89],
+        0.13,
+      );
+      sculpt(
+        driverBody,
+        characterId === 'panda' ? deepFur : fur,
+        side * 0.29,
+        0.46,
+        0.94,
+        0.145,
+        0.13,
+        0.13,
+      );
+    }
+    sculpt(
       driverBody,
-      characterId === 'penguin' ? gold : fur,
-      x * 0.8,
-      -0.15,
-      0.44,
-      0.2,
-      0.16,
-      0.29,
+      isPenguin ? gold : characterId === 'panda' ? deepFur : fur,
+      side * 0.29,
+      -0.12,
+      0.47,
+      0.19,
+      0.13,
+      0.27,
     );
   }
   const scarf = material(
     characterId === 'panda'
-      ? 0xec8567
+      ? 0xe88a6e
       : characterId === 'capybara'
-        ? 0x4daf9e
+        ? 0x55a99b
         : characterId === 'fox'
-          ? 0xf4d671
-          : 0xec8274,
+          ? 0xf0c956
+          : 0xe88473,
+    0.8,
   );
-  cylinder(driverBody, scarf, 0, 0.8, 0, 0.37, 0.37, 0.18, 16);
-  const scarfTail = box(driverBody, scarf, 0.22, 0.46, -0.44, 0.2, 0.66, 0.1, 0.05);
-  scarfTail.rotation.z = -0.22;
-  if (characterId === 'capybara') {
-    ellipsoid(head, fur, 0, 0, 0.03, 0.62, 0.47, 0.58);
-    ellipsoid(head, material(0xc59b70), 0, -0.15, 0.44, 0.5, 0.27, 0.29);
-    for (const x of [-0.43, 0.43]) {
-      ellipsoid(head, fur, x, 0.36, -0.06, 0.18, 0.2, 0.14);
-      ellipsoid(head, pink, x, 0.39, 0.055, 0.09, 0.11, 0.04);
+  sculpt(driverBody, scarf, 0, 0.79, -0.015, 0.36, 0.13, 0.34);
+  const knot = sculpt(driverBody, scarf, -0.3, 0.74, 0.2, 0.13, 0.12, 0.13);
+  knot.rotation.z = -0.3;
+  const scarfTail = sculpt(driverBody, scarf, -0.39, 0.5, 0.12, 0.12, 0.28, 0.07);
+  scarfTail.rotation.z = -0.2;
+  if (characterId === 'panda') {
+    sculpt(head, fur, 0, 0.015, 0, 0.61, 0.51, 0.48);
+    for (const side of [-1, 1]) {
+      const ear = sculpt(head, white, side * 0.44, 0.41, -0.045, 0.205, 0.235, 0.13);
+      ear.rotation.z = side * -0.24;
+      const inner = sculpt(head, deepFur, side * 0.44, 0.42, 0.057, 0.135, 0.16, 0.045);
+      inner.rotation.z = ear.rotation.z;
+      const cheek = sculpt(head, white, side * 0.285, -0.14, 0.366, 0.3, 0.235, 0.103);
+      cheek.rotation.z = side * -0.23;
+      const mask = sculpt(head, deepFur, side * 0.245, 0.025, 0.452, 0.148, 0.155, 0.038);
+      mask.rotation.z = side * -0.18;
+      const brow = sculpt(head, white, side * 0.23, 0.215, 0.407, 0.162, 0.069, 0.05);
+      brow.rotation.z = side * -0.17;
     }
-    for (const x of [-0.27, 0.27]) {
-      ellipsoid(head, black, x, 0.045, 0.548, 0.052, 0.074, 0.035);
-      ellipsoid(head, white, x - 0.012, 0.07, 0.579, 0.016, 0.02, 0.012);
-    }
-    for (const x of [-0.12, 0.12]) ellipsoid(head, black, x, -0.11, 0.695, 0.036, 0.024, 0.016);
-    const orange = material(0xf2a12a);
-    ellipsoid(head, orange, 0, 0.53, -0.02, 0.2, 0.18, 0.2);
-    const leaf = ellipsoid(head, material(0x4e9462), 0.12, 0.72, -0.01, 0.13, 0.035, 0.07);
-    leaf.rotation.z = 0.3;
-  } else if (characterId === 'penguin') {
-    ellipsoid(head, fur, 0, 0, 0, 0.54, 0.57, 0.49);
-    for (const x of [-0.2, 0.2]) ellipsoid(head, white, x, -0.06, 0.385, 0.3, 0.38, 0.17);
-    for (const x of [-0.22, 0.22]) {
-      ellipsoid(head, black, x, 0.04, 0.533, 0.067, 0.09, 0.034);
-      ellipsoid(head, white, x - 0.015, 0.073, 0.559, 0.02, 0.025, 0.015);
-    }
-    ellipsoid(head, gold, 0, -0.14, 0.6, 0.18, 0.1, 0.2);
-    const hat = material(0xe98c78);
-    ellipsoid(head, hat, 0, 0.48, -0.02, 0.48, 0.18, 0.44);
-    ellipsoid(head, hat, 0, 0.63, 0, 0.12, 0.1, 0.12);
-  } else {
-    ellipsoid(head, fur, 0, 0, 0, 0.59, 0.52, 0.49);
-    const earGeometry = new THREE.ConeGeometry(0.235, 0.57, 3);
-    for (const x of [-0.42, 0.42]) {
-      const ear = new THREE.Mesh(earGeometry, fur);
-      ear.position.set(x, 0.46, -0.045);
-      ear.rotation.z = x < 0 ? 0.23 : -0.23;
-      ear.rotation.y = Math.PI;
-      head.add(ear);
-      const inner = new THREE.Mesh(new THREE.ConeGeometry(0.135, 0.33, 3), pink);
-      inner.position.set(x, 0.48, 0.065);
-      inner.rotation.copy(ear.rotation);
-      head.add(inner);
-    }
-    for (const x of [-0.24, 0.24]) {
-      const patch = ellipsoid(head, white, x, -0.02, 0.37, 0.28, 0.27, 0.17);
-      patch.rotation.z = x > 0 ? -0.2 : 0.2;
-      if (characterId === 'panda') {
-        const eyePatch = ellipsoid(head, material(0x704b3b), x, 0.065, 0.509, 0.145, 0.15, 0.044);
-        eyePatch.rotation.z = x > 0 ? -0.2 : 0.2;
+    eyes(0.245, 0.025, 0.492, 1.02);
+    sculpt(head, white, 0, -0.205, 0.448, 0.27, 0.17, 0.17);
+    sculpt(head, black, 0, -0.135, 0.607, 0.088, 0.053, 0.044);
+    stroke(head, [
+      [0, -0.177, 0.625],
+      [0, -0.23, 0.612],
+    ]);
+    stroke(head, [
+      [-0.085, -0.248, 0.592],
+      [0, -0.271, 0.604],
+      [0.085, -0.248, 0.592],
+    ]);
+    tail(true);
+  } else if (characterId === 'capybara') {
+    // A continuous, gently squared surface keeps the broad capybara muzzle soft.
+    const softForm = (sx: number, sy: number, sz: number, power: number) => {
+      const geometry = characterSphere.clone(),
+        positions = geometry.getAttribute('position'),
+        normals = geometry.getAttribute('normal');
+      for (let i = 0; i < positions.count; i++) {
+        const x = positions.getX(i),
+          y = positions.getY(i),
+          z = positions.getZ(i);
+        const round = (value: number) => Math.sign(value) * Math.pow(Math.abs(value), power);
+        positions.setXYZ(i, round(x) * sx, round(y) * sy, round(z) * sz);
+        const normal = new THREE.Vector3(
+          (Math.sign(x) * Math.pow(Math.abs(x), 2 - power)) / sx,
+          (Math.sign(y) * Math.pow(Math.abs(y), 2 - power)) / sy,
+          (Math.sign(z) * Math.pow(Math.abs(z), 2 - power)) / sz,
+        ).normalize();
+        normals.setXYZ(i, normal.x, normal.y, normal.z);
       }
-      ellipsoid(head, black, x, 0.055, 0.551, 0.057, 0.083, 0.033);
-      ellipsoid(head, white, x - 0.014, 0.079, 0.578, 0.018, 0.024, 0.012);
-      ellipsoid(head, pink, x * 1.5, -0.12, 0.45, 0.1, 0.052, 0.022);
+      sculptGeometries.add(geometry);
+      return geometry;
+    };
+    const crown = new THREE.Mesh(softForm(0.595, 0.45, 0.5, 0.8), fur);
+    crown.position.set(0, -0.015, 0.035);
+    crown.castShadow = true;
+    head.add(crown);
+    const muzzle = new THREE.Mesh(softForm(0.505, 0.245, 0.325, 0.66), tan);
+    muzzle.position.set(0, -0.165, 0.47);
+    muzzle.castShadow = true;
+    head.add(muzzle);
+    for (const side of [-1, 1]) {
+      sculpt(head, fur, side * 0.455, 0.4, -0.16, 0.14, 0.17, 0.105);
+      sculpt(head, tan, side * 0.455, 0.415, -0.073, 0.079, 0.104, 0.033);
+      const brow = sculpt(head, deepFur, side * 0.4, 0.205, 0.425, 0.078, 0.018, 0.013);
+      brow.rotation.z = side * -0.08;
+      sculpt(head, deepFur, side * 0.19, -0.1, 0.799, 0.027, 0.019, 0.012);
     }
-    ellipsoid(head, white, 0, -0.22, 0.42, 0.33, 0.2, 0.24);
-    ellipsoid(head, black, 0, -0.15, 0.657, 0.095, 0.057, 0.052);
-    const tail = new THREE.Group();
-    tail.position.set(0.23, 0.19, -0.4);
-    tail.rotation.z = -0.45;
-    driverBody.add(tail);
-    ellipsoid(tail, fur, 0, 0.1, -0.25, 0.23, 0.25, 0.65);
-    if (characterId === 'panda')
-      for (let i = 0; i < 3; i++)
-        ellipsoid(tail, material(0x774e3a), 0, 0.1, -0.26 - i * 0.2, 0.235, 0.26, 0.1);
-    else ellipsoid(tail, white, 0, 0.1, -0.7, 0.2, 0.22, 0.23);
+    eyes(0.405, 0.115, 0.475, 0.81);
+    stroke(
+      head,
+      [
+        [-0.15, -0.285, 0.784],
+        [0, -0.303, 0.788],
+        [0.15, -0.285, 0.784],
+      ],
+      0.0085,
+      deepFur,
+    );
+    const citrus = material(0xf0a836, 0.72);
+    sculpt(head, citrus, -0.08, 0.5, -0.06, 0.145, 0.13, 0.145);
+    const leaf = sculpt(head, material(0x689b60), 0.025, 0.618, -0.065, 0.12, 0.023, 0.055);
+    leaf.rotation.z = 0.22;
+  } else if (characterId === 'fox') {
+    pointedEar(-0.365, 0.17);
+    pointedEar(0.365, -0.17);
+    sculpt(head, fur, 0, 0.015, 0, 0.535, 0.485, 0.46);
+    for (const side of [-1, 1]) {
+      const cheek = sculpt(head, white, side * 0.255, -0.18, 0.34, 0.275, 0.205, 0.112);
+      cheek.rotation.z = side * 0.3;
+      const brow = sculpt(head, deepFur, side * 0.225, 0.205, 0.405, 0.095, 0.023, 0.018);
+      brow.rotation.z = side * -0.18;
+    }
+    eyes(0.225, 0.065, 0.441, 1.0);
+    sculpt(head, white, 0, -0.205, 0.49, 0.205, 0.145, 0.25);
+    sculpt(head, black, 0, -0.137, 0.723, 0.077, 0.048, 0.044);
+    stroke(head, [
+      [0, -0.18, 0.747],
+      [0, -0.23, 0.736],
+    ]);
+    stroke(head, [
+      [-0.08, -0.253, 0.709],
+      [0, -0.276, 0.726],
+      [0.08, -0.253, 0.709],
+    ]);
+    tail(false);
+  } else {
+    sculpt(head, fur, 0, 0.015, -0.005, 0.53, 0.54, 0.455);
+    for (const side of [-1, 1]) {
+      const face = sculpt(head, white, side * 0.185, -0.075, 0.35, 0.255, 0.345, 0.115);
+      face.rotation.z = side * -0.12;
+    }
+    sculpt(head, white, 0, -0.24, 0.334, 0.33, 0.255, 0.115);
+    eyes(0.205, 0.045, 0.471, 1.0);
+    sculpt(head, gold, 0, -0.11, 0.51, 0.145, 0.077, 0.16);
+    sculpt(head, material(0xe5a74d, 0.7), 0, -0.165, 0.533, 0.107, 0.03, 0.103);
+    const hat = material(0xe88a76, 0.82);
+    sculpt(head, hat, 0, 0.47, -0.065, 0.4, 0.13, 0.35);
+    sculpt(head, hat, 0, 0.555, -0.075, 0.31, 0.12, 0.29);
+    sculpt(head, hat, -0.045, 0.667, -0.075, 0.086, 0.084, 0.086);
   }
   batchStatic(head);
   batchStatic(driverBody);
+  sculptGeometries.forEach((geometry) => geometry.dispose());
   const steering = new THREE.Group();
   steering.position.set(0, 1.3, 0.65);
   root.add(steering);
-  const wheel = new THREE.Mesh(new THREE.TorusGeometry(0.32, 0.045, 8, 20), rubber);
-  wheel.rotation.x = 0.7;
-  steering.add(wheel);
-  const shaft = cylinder(steering, chrome, 0, -0.2, -0.04, 0.035, 0.035, 0.5, 8);
+  const wheelFrame = new THREE.Group();
+  wheelFrame.rotation.x = 0.7;
+  steering.add(wheelFrame);
+  const wheel = new THREE.Mesh(new THREE.TorusGeometry(0.31, 0.048, 10, 28), rubber);
+  wheelFrame.add(wheel);
+  for (let i = 0; i < 3; i++) {
+    const angle = Math.PI / 2 + (i * Math.PI * 2) / 3;
+    const spoke = box(
+      wheelFrame,
+      chrome,
+      Math.cos(angle) * 0.15,
+      Math.sin(angle) * 0.15,
+      0,
+      0.27,
+      0.035,
+      0.035,
+      0.015,
+    );
+    spoke.rotation.z = angle;
+  }
+  ellipsoid(wheelFrame, gold, 0, 0, 0.015, 0.085, 0.085, 0.04);
+  const shaft = cylinder(steering, chrome, 0, -0.2, -0.04, 0.035, 0.035, 0.5, 10);
   shaft.rotation.x = 0.45;
+  batchStatic(steering);
   const flameMaterial = new THREE.MeshBasicMaterial({
     color: 0x85ffff,
     transparent: true,
@@ -350,7 +643,12 @@ export function disposeModel(root: THREE.Object3D) {
     materials = new Set<THREE.Material>();
   root.traverse((object) => {
     if (object instanceof THREE.Mesh) {
-      if (object.geometry !== sphere) geometries.add(object.geometry);
+      if (
+        object.geometry !== sphere &&
+        object.geometry !== characterSphere &&
+        object.geometry !== detailSphere
+      )
+        geometries.add(object.geometry);
       for (const mat of Array.isArray(object.material) ? object.material : [object.material])
         materials.add(mat);
     }

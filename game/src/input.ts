@@ -69,7 +69,8 @@ export class KeyboardInput {
     const has = (...keys: string[]) => keys.some((k) => this.down.has(k));
     const input = {
       throttle: Number(has('KeyW', 'ArrowUp')) - Number(has('KeyS', 'ArrowDown')),
-      steer: Number(has('KeyD', 'ArrowRight')) - Number(has('KeyA', 'ArrowLeft')),
+      // With +Z forward, positive yaw turns toward the chase camera's left.
+      steer: Number(has('KeyA', 'ArrowLeft')) - Number(has('KeyD', 'ArrowRight')),
       drift: has('Space'),
       item: this.item,
       recover: this.recover,

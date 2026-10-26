@@ -177,6 +177,11 @@ if (import.meta.env.DEV) {
   Object.assign(window, {
     __PAWPRINT_TEST__: {
       snapshot: () => simulation.snapshot(),
+      camera: () => ({
+        view: world.camera.matrixWorldInverse.toArray(),
+        projection: world.camera.projectionMatrix.toArray(),
+        position: world.camera.position.toArray(),
+      }),
       screen: () => ui.screen,
       autoDrive: (enabled: boolean) => {
         testAutoDrive = enabled;

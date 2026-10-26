@@ -11,6 +11,13 @@ const page = await browser.newPage({
   viewport: { width: 1920, height: 1080 },
   deviceScaleFactor: 1,
 });
+const difficulties = process.env.QA_DIFFICULTIES?.split(',').map((value) => value.trim()) ?? [
+  'easy',
+  'normal',
+  'hard',
+];
+if (difficulties.some((value) => !['easy', 'normal', 'hard'].includes(value)))
+  throw new Error('QA_DIFFICULTIES must contain easy, normal, or hard.');
 const errors = [],
   reports = [];
 page.on('pageerror', (e) => errors.push(e.message));
@@ -19,7 +26,7 @@ try {
   await page.getByRole('button', { name: '设置', exact: true }).click();
   await page.locator('[data-setting="sound"]').uncheck();
   await page.getByRole('button', { name: '完成', exact: true }).click();
-  for (const difficulty of ['easy', 'normal', 'hard']) {
+  for (const difficulty of difficulties) {
     await page.getByRole('button', { name: '出发，去兜个风' }).click();
     await page.locator('[data-action="driving"][data-id="manual"]').click();
     await page.locator('[data-action="difficulty"][data-id="' + difficulty + '"]').click();
@@ -84,8 +91,8 @@ try {
       const desired = new Set();
       if (state.controls.throttle > 0.1) desired.add('KeyW');
       if (state.controls.throttle < -0.1) desired.add('KeyS');
-      if (state.controls.steer > 0.13) desired.add('KeyD');
-      if (state.controls.steer < -0.13) desired.add('KeyA');
+      if (state.controls.steer > 0.13) desired.add('KeyA');
+      if (state.controls.steer < -0.13) desired.add('KeyD');
       for (const key of held)
         if (!desired.has(key)) {
           await page.keyboard.up(key);
@@ -105,7 +112,7 @@ try {
       await new Promise((resolve) => setTimeout(resolve, 40));
     }
     for (const key of held) await page.keyboard.up(key);
-    if (reports.length !== ['easy', 'normal', 'hard'].indexOf(difficulty) + 1)
+    if (reports.length !== difficulties.indexOf(difficulty) + 1)
       throw new Error('Keyboard driver failed to finish ' + difficulty);
     await page.getByRole('button', { name: '返回海湾' }).waitFor();
     await page.screenshot({
@@ -115,6 +122,7 @@ try {
     });
     await page.getByRole('button', { name: '返回海湾' }).click();
   }
+  if (errors.length) throw new Error('Browser runtime errors: ' + errors.join('; '));
   await writeFile(
     path.join(dir, 'keyboard-race-report.json'),
     JSON.stringify({ reports, errors }, null, 2),

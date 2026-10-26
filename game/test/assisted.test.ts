@@ -108,11 +108,11 @@ describe('accessible assisted racing', () => {
     s.step(1 / 60, { ...EMPTY_INPUT, lane: 1 });
     expect(Math.hypot(r.x - oldX, r.z - oldZ)).toBeLessThan(1);
     step(s, 2);
-    expect(r.lane).toBeCloseTo(4.6, 1);
+    expect(r.lane).toBeCloseTo(LANE_OFFSETS[2], 1);
     expect(r.targetLane).toBe(1);
     s.step(1 / 60, { ...EMPTY_INPUT, lane: -1 });
     step(s, 2);
-    expect(r.lane).toBeCloseTo(-4.6, 1);
+    expect(r.lane).toBeCloseTo(LANE_OFFSETS[0], 1);
   });
   it('spends one nitro charge per action, speeds up and recharges', () => {
     const s = make(),

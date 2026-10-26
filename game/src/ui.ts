@@ -1,4 +1,5 @@
 import { CHARACTERS, ITEM_INFO } from './types';
+import { icon, directionKey } from './icons';
 import type {
   RaceConfig,
   RaceSnapshot,
@@ -26,8 +27,7 @@ interface Actions {
 }
 const paw =
   '<svg viewBox="0 0 40 40" aria-hidden="true"><ellipse cx="20" cy="27" rx="10" ry="8"/><ellipse cx="8" cy="16" rx="4" ry="5" transform="rotate(-25 8 16)"/><ellipse cx="16" cy="9" rx="4" ry="5"/><ellipse cx="26" cy="10" rx="4" ry="5"/><ellipse cx="33" cy="18" rx="4" ry="5" transform="rotate(25 33 18)"/></svg>';
-const arrow =
-  '<svg viewBox="0 0 32 24" aria-hidden="true"><path d="M2 12h26M19 3l9 9-9 9" fill="none" stroke="currentColor" stroke-width="3"/></svg>';
+const arrow = icon('right');
 export class GameUI {
   screen: Screen = 'home';
   private settingsReturn: Screen = 'home';
@@ -43,6 +43,10 @@ export class GameUI {
   private finalSaved = false;
   private lastHudTime = -1;
   private minimap: HTMLCanvasElement | null = null;
+  private recentInteraction: { id: string; title: string; successes: number; lap: number } | null =
+    null;
+  private missedInteractionUntil = 0;
+  private missedInteractionTitle = '';
   constructor(
     private root: HTMLElement,
     private store: SaveStore,
@@ -145,6 +149,8 @@ export class GameUI {
   }
   show(screen: Screen) {
     this.screen = screen;
+    this.recentInteraction = null;
+    this.missedInteractionUntil = 0;
     this.render();
     if (screen === 'playing') this.lastHudTime = -1;
   }
@@ -157,7 +163,7 @@ export class GameUI {
       paw +
       '<span>PAWPRINT<span class="brand-small">ISLAND MOTOR CLUB</span></span></a><nav aria-label="游戏工具">' +
       this.button('sound', this.store.data.settings.sound ? '声音 开' : '声音 关', 'utility') +
-      this.button('fullscreen', '全屏 ↗', 'utility') +
+      this.button('fullscreen', '全屏 ' + icon('fullscreen'), 'utility') +
       this.button('settings', '设置', 'utility') +
       '</nav></header>'
     );
@@ -168,11 +174,15 @@ export class GameUI {
     if (this.screen === 'home') {
       this.root.innerHTML =
         this.header() +
-        '<main class="home"><div class="hero"><p class="eyebrow"><span class="spark">✦</span> SUNBREAK COVE · ROUND 01</p><h1>PAWPRINT<br><em>PARADISE</em><span class="hero-star">✦</span></h1><p class="chinese-title">萌爪海湾 <span>海岛卡丁车大赛</span></p>' +
+        '<main class="home"><div class="hero"><p class="eyebrow"><span class="spark">' +
+        icon('spark') +
+        '</span> SUNBREAK COVE · ROUND 01</p><h1>PAWPRINT<br><em>PARADISE</em><span class="hero-star">' +
+        icon('spark') +
+        '</span></h1><p class="chinese-title">萌爪海湾 <span>海岛卡丁车大赛</span></p>' +
         this.button('setup', '<span>出发，去兜个风</span>' + arrow, 'button primary start-button') +
         this.homeControls() +
         '</div><aside class="course-card"><span class="course-number">01</span><div><p class="eyebrow">TODAY’S LITTLE ESCAPE</p><h2>晴浪海湾</h2><p class="course-meta"><span>● ● ●</span> 3 圈 · 8 位车手</p></div><canvas id="course-map" width="190" height="160" aria-label="晴浪海湾赛道示意图"></canvas></aside><footer class="home-footer"><span>一点海风，很多快乐。</span>' +
-        this.button('help', '第一次来？看看怎么玩 →', 'text-button') +
+        this.button('help', '第一次来？看看怎么玩 ' + arrow, 'text-button') +
         '</footer></main>';
       this.drawMap(this.root.querySelector<HTMLCanvasElement>('#course-map')!, null, true);
     } else if (this.screen === 'setup') {
@@ -193,7 +203,9 @@ export class GameUI {
             (this.selected === c.id) +
             '" style="--accent:' +
             c.accent +
-            '"><span class="selected-mark">✓</span><img src="' +
+            '"><span class="selected-mark">' +
+            icon('check') +
+            '</span><img src="' +
             this.portraits[c.id] +
             '" alt="' +
             c.title +
@@ -249,7 +261,7 @@ export class GameUI {
         '</p></fieldset></div>' +
         this.drivingSelector() +
         '<div class="setup-footer">' +
-        this.button('help', '怎么玩更痛快 ↗', 'text-button') +
+        this.button('help', '看看怎么玩 ' + arrow, 'text-button') +
         this.button('start', '<span>驶上发车线</span>' + arrow, 'button primary') +
         '</div></section></main>';
     } else if (this.screen === 'help') {
@@ -258,22 +270,34 @@ export class GameUI {
         this.header() +
         `<main class="overlay"><section class="panel help-panel"><p class="eyebrow">LESS STEERING. MORE SMILING.</p><h2>${assisted ? '方向盘交给海风，快乐交给你。' : '想亲自掌舵？随时可以。'}</h2><div class="instructions">${
           assisted
-            ? '<div><span class="instruction-number">01</span><h3>选条喜欢的线</h3><p>自动加速、自动过弯，不用一直按键。<br><kbd>← / A</kbd> 左线，<kbd>↑ / W</kbd> 中线，<kbd>→ / D</kbd> 右线。<br>选线门前，挑氮气或道具补给。</p></div><div><span class="instruction-number">02</span><h3>想超车，就按一下</h3><p><kbd>空格</kbd> 消耗 30 氮气，立刻冲刺。<br>氮气自动恢复，青色能量晶体也能补充。<br><kbd>E</kbd> 放道具；画面按钮同样能操作。</p></div><div><span class="instruction-number">03</span><h3>把握高光时刻</h3><p>看到跳台、漂移和回旋提示后，<br>在亮起的窗口按 <kbd>F</kbd>。<br>金色时机奖励更多氮气和加速。<br>错过也能继续，不会撞停或掉出赛道。</p></div>'
-            : '<div><span class="instruction-number">01</span><h3>手动驾驶</h3><p><kbd>W / ↑</kbd> 加速，<kbd>S / ↓</kbd> 刹车。<br><kbd>A D / ← →</kbd> 转向。</p></div><div><span class="instruction-number">02</span><h3>漂移加速</h3><p>有速度时，按住 <kbd>空格</kbd> 并转向。<br>蓝色与金色为两档蓄力，松开加速。</p></div><div><span class="instruction-number">03</span><h3>道具与复位</h3><p><kbd>E</kbd> 使用道具，<kbd>R</kbd> 回检查点。<br>手动模式纪录单独保存。</p></div>'
+            ? '<div><span class="instruction-number">01</span><h3>选条喜欢的线</h3><p>自动加速、自动过弯，不用一直按键。<br><span class="help-key-action">' +
+              directionKey('left') +
+              ' <kbd>A</kbd> 左线</span>，<span class="help-key-action">' +
+              directionKey('up') +
+              ' <kbd>W</kbd> 中线</span>，<span class="help-key-action">' +
+              directionKey('right') +
+              ' <kbd>D</kbd> 右线</span>。<br>选线门前，挑氮气或道具补给。</p></div><div><span class="instruction-number">02</span><h3>想超车，就按一下</h3><p><kbd>空格</kbd> 消耗 30 氮气，立刻冲刺。<br>氮气自动恢复，青色能量晶体也能补充。<br><kbd>E</kbd> 放道具；画面按钮同样能操作。</p></div><div><span class="instruction-number">03</span><h3>把握高光时刻</h3><p>看到跳台、漂移和回旋提示后，<br>在亮起的窗口按 <kbd>F</kbd>。<br>金色时机奖励更多氮气和加速。<br>错过也能继续，不会撞停或掉出赛道。</p></div>'
+            : '<div><span class="instruction-number">01</span><h3>手动驾驶</h3><p><kbd>W</kbd> ' +
+              directionKey('up') +
+              ' 加速，<kbd>S</kbd> ' +
+              directionKey('down') +
+              ' 刹车。<br><kbd>A</kbd> ' +
+              directionKey('left') +
+              ' 向左，<kbd>D</kbd> ' +
+              directionKey('right') +
+              ' 向右。</p></div><div><span class="instruction-number">02</span><h3>漂移加速</h3><p>有速度时，按住 <kbd>空格</kbd> 并转向。<br>蓝色与金色为两档蓄力，松开加速。</p></div><div><span class="instruction-number">03</span><h3>道具与复位</h3><p><kbd>E</kbd> 使用道具，<kbd>R</kbd> 回检查点。<br>手动模式纪录单独保存。</p></div>'
         }</div><div class="help-note"><kbd>Esc</kbd> 暂停 <span>·</span> 离开窗口自动暂停 <span>·</span> 轻松 / 手动模式可在选角页切换</div>` +
         this.button('back-setup', '出发，选车手去 ' + arrow, 'button primary') +
         '</section></main>';
     } else if (this.screen === 'playing') {
       this.root.innerHTML =
         '<main class="hud" aria-label="比赛信息"><div class="position-widget"><span class="hud-label">POSITION</span><div><strong id="position">1</strong><span id="racer-count">/ 8</span></div></div><div class="lap-widget"><span class="hud-label">LAP</span><strong id="lap">1 <small>/ 3</small></strong></div><div class="timing-widget"><span class="hud-label">RACE TIME</span><strong id="race-time">0:00.000</strong><span id="best-lap">最佳单圈 — —</span></div>' +
-        this.button('pause', 'Ⅱ<span>暂停</span>', 'pause-button') +
-        '<div class="map-widget"><span class="hud-label">SUNBREAK COVE</span><canvas id="minimap" width="240" height="200" aria-label="实时赛道位置"></canvas></div><div class="item-widget"><div id="item-icon" class="item-icon">?</div><div><strong id="item-name">寻找道具箱</strong><span id="item-key"><kbd>E</kbd> 使用道具</span></div></div><div class="speed-widget"><div><strong id="speed">0</strong><span>KM/H</span></div><div class="drift-meter"><i id="drift-fill"></i></div><span id="drift-label">按住 空格 + 转向 漂移</span></div><div id="countdown" class="countdown" aria-live="polite"></div><div id="race-message" class="race-message" aria-live="polite"></div><div id="race-tip" class="race-tip"><kbd>W</kbd> 加速 <kbd>A</kbd><kbd>D</kbd> 转向 <kbd>SPACE</kbd> 漂移 <kbd>E</kbd> 道具 <kbd>R</kbd> 回到赛道</div></main>';
+        this.button('pause', icon('pause') + '<span>暂停</span>', 'pause-button') +
+        '<div class="map-widget"><span class="hud-label">SUNBREAK COVE</span><canvas id="minimap" width="240" height="200" aria-label="实时赛道位置"></canvas></div><div class="item-widget"><div id="item-icon" class="item-icon"></div><div><strong id="item-name">寻找道具箱</strong><span id="item-key"><kbd>E</kbd> 使用道具</span></div></div><div class="speed-widget"><div><strong id="speed">0</strong><span>KM/H</span></div><div class="drift-meter"><i id="drift-fill"></i></div><span id="drift-label">按住 空格 + 转向 漂移</span></div><div id="countdown" class="countdown" aria-live="polite"></div><div id="race-message" class="race-message" aria-live="polite"></div><div id="race-tip" class="race-tip"><kbd>W</kbd> 加速 <kbd>A</kbd><kbd>D</kbd> 转向 <kbd>SPACE</kbd> 漂移 <kbd>E</kbd> 道具 <kbd>R</kbd> 回到赛道</div></main>';
       this.minimap = this.root.querySelector('#minimap');
       if (this.driving === 'assisted') {
         const hud = this.root.querySelector('.hud')!;
         hud.classList.add('assisted-hud');
-        this.root.querySelector('#race-tip')!.textContent =
-          '已经在自动驾驶 · 左右选线，空格氮气，E 道具，F 互动';
         hud.insertAdjacentHTML('beforeend', this.assistedControls());
       }
     } else if (this.screen === 'pause') {
@@ -338,7 +362,7 @@ export class GameUI {
         '</strong></div><div><span>最佳单圈</span><strong>' +
         formatTime(lap) +
         '</strong></div></div>' +
-        (this.newRecord ? '<p class="record-badge">✦ 新的个人纪录</p>' : '') +
+        (this.newRecord ? '<p class="record-badge">' + icon('spark') + ' 新的个人纪录</p>' : '') +
         (s.config.driving !== 'manual'
           ? '<p class="drive-result">轻松驾驶 · 氮气 ' +
             player.nitroUses +
@@ -398,17 +422,20 @@ export class GameUI {
   }
   private homeControls() {
     return this.driving === 'assisted'
-      ? '<p class="assist-intro">自动过弯，你只管选线、加速和超车。</p><div class="key-strip"><span><kbd>← ↑ →</kbd> 选线</span><span><kbd>SPACE</kbd> 氮气</span><span><kbd>E</kbd> 道具</span><span><kbd>F</kbd> 互动</span></div>'
+      ? '<p class="assist-intro">自动过弯，你只管选线、加速和超车。</p><div class="key-strip"><span>' +
+          directionKey('left') +
+          directionKey('up') +
+          directionKey('right') +
+          ' 选线</span><span><kbd>SPACE</kbd> 氮气</span><span><kbd>E</kbd> 道具</span><span><kbd>F</kbd> 互动</span></div>'
       : '<p class="assist-intro">当前为手动驾驶 · 选角页可切换轻松驾驶</p><div class="key-strip"><span><kbd>WASD</kbd> 驾驶</span><span><kbd>SPACE</kbd> 漂移</span><span><kbd>E</kbd> 道具</span></div>';
   }
   private drivingSelector() {
-    return `<div class="driving-choice"><div><strong>怎么玩？</strong><p>${this.driving === 'assisted' ? '自动驾驶，选线和行动由你决定。' : '亲自掌握油门、转向与漂移。'}</p></div><div class="segmented">${this.option('driving', 'assisted', '轻松驾驶 · 推荐', this.driving === 'assisted')}${this.option('driving', 'manual', '手动驾驶', this.driving === 'manual')}</div></div>`;
+    return `<div class="driving-choice"><div><strong>怎么玩？</strong><p>${this.driving === 'assisted' ? '自动驾驶，选线和行动由你决定。' : '亲自掌握油门、转向与漂移。'}</p></div><div class="segmented">${this.option('driving', 'assisted', icon('spark') + '轻松驾驶 · 自动过弯', this.driving === 'assisted')}${this.option('driving', 'manual', icon('wheel') + '手动驾驶 · 自己掌舵', this.driving === 'manual')}</div></div>`;
   }
   private assistedControls() {
-    return `<div class="assist-badge">✦ 轻松驾驶 <span>自动加速 · 自动过弯</span></div>
-    <aside id="route-panel" class="route-panel" hidden><p>前方选线 · <span id="route-distance"></span></p><div><button data-action="drive-left">← <strong id="route-left">氮气 +35</strong></button><button data-action="drive-right"><strong id="route-right">道具补给</strong> →</button></div></aside>
-    <aside id="interaction-panel" class="interaction-panel" hidden><p id="interaction-title"></p><div class="timing-rail"><span></span><i id="timing-pointer"></i></div><button data-action="interact" id="action-button"><kbd>F</kbd><strong id="interaction-hint">靠近后行动</strong></button></aside>
-    <div class="drive-dock"><div class="lane-controls" role="group" aria-label="行驶路线"><button data-action="drive-left" aria-label="选择左线">←<small>左线</small></button><button data-action="drive-center" aria-label="选择中线">↑<small>中线</small></button><button data-action="drive-right" aria-label="选择右线">→<small>右线</small></button></div><button data-action="nitro" class="nitro-control"><span><kbd>SPACE</kbd><strong id="nitro-title">氮气冲刺</strong><b id="nitro-amount">60</b></span><div class="nitro-meter"><i id="nitro-fill"></i></div><small id="nitro-hint">一次消耗 30 · 自动充能</small></button><button data-action="item" class="item-control"><kbd>E</kbd><strong id="dock-item">等待道具</strong></button></div>`;
+    return `<aside id="route-panel" class="route-panel" hidden><p>前方补给 <span id="route-distance"></span></p><div><button data-action="drive-left" aria-label="选择左线补给">${icon('left')}<strong id="route-left">氮气 +35</strong></button><button data-action="drive-right" aria-label="选择右线补给"><strong id="route-right">道具补给</strong>${icon('right')}</button></div></aside>
+    <aside id="interaction-panel" class="interaction-panel" hidden aria-label="赛道互动"><div class="interaction-heading"><p id="interaction-title"></p><span id="interaction-state" role="status">即将到达</span></div><div class="timing-rail" aria-hidden="true"><span></span><i id="timing-pointer"></i></div><button data-action="interact" id="action-button"><kbd>F</kbd><strong id="interaction-hint">靠近后行动</strong></button><small id="interaction-detail"></small></aside>
+    <div class="drive-dock"><div class="lane-controls" role="group" aria-label="行驶路线"><button data-action="drive-left" aria-label="选择左线">${icon('left')}<small>左线 <span>A</span></small></button><button data-action="drive-center" aria-label="选择中线">${icon('up')}<small>中线 <span>W</span></small></button><button data-action="drive-right" aria-label="选择右线">${icon('right')}<small>右线 <span>D</span></small></button></div><button data-action="nitro" class="nitro-control" aria-label="氮气冲刺"><span><kbd>SPACE</kbd><strong id="nitro-title">氮气冲刺</strong><b id="nitro-amount">60</b></span><div class="nitro-meter"><i id="nitro-fill"></i></div><small id="nitro-hint">消耗 30 · 自动充能</small></button><button data-action="item" class="item-control" aria-label="使用道具"><span class="dock-item-top"><kbd>E</kbd><span id="dock-item-icon">${icon('box')}</span></span><strong id="dock-item">等待道具</strong><small id="dock-item-hint">沿途拾取补给箱</small></button></div>`;
   }
   private updateAssisted(snapshot: RaceSnapshot) {
     const r = snapshot.racers[0],
@@ -445,19 +472,38 @@ export class GameUI {
     text('#nitro-amount', String(Math.floor(r.nitro)));
     text(
       '#nitro-hint',
-      r.stun > 0
-        ? '受击恢复中 · 氮气没有消耗'
-        : r.nitroTime > 0.15
-          ? '保持冲刺 · 结束后可以再次点火'
-          : r.nitro >= 30
-            ? '空格 / 点击 · 冲出去'
-            : '自动恢复 · 拾取青色晶体更快',
+      !active
+        ? '发车后可用'
+        : r.stun > 0
+          ? '恢复后即可使用'
+          : r.nitroTime > 0.15
+            ? '冲刺结束后可再次使用'
+            : r.nitro >= 30
+              ? '消耗 30 · 空格或点击'
+              : '还差 ' + Math.ceil(30 - r.nitro) + ' · 自动充能',
     );
     this.root.querySelector<HTMLElement>('#nitro-fill')!.style.width = r.nitro + '%';
     const item = this.root.querySelector<HTMLButtonElement>('.item-control')!;
     item.disabled = !active || !r.item || r.itemCooldown > 0;
     item.hidden = snapshot.config.mode === 'time';
     text('#dock-item', r.item ? ITEM_INFO[r.item].name : '等待道具');
+    text(
+      '#dock-item-hint',
+      !active
+        ? '发车后可用'
+        : !r.item
+          ? '沿途拾取补给箱'
+          : r.itemCooldown > 0
+            ? '冷却中'
+            : ITEM_INFO[r.item].description,
+    );
+    const itemSymbol = this.root.querySelector<HTMLElement>('#dock-item-icon')!;
+    if (itemSymbol.dataset.item !== (r.item ?? 'box')) {
+      itemSymbol.dataset.item = r.item ?? 'box';
+      itemSymbol.innerHTML = icon(r.item ?? 'box');
+    }
+    nitro.title = !active ? '发车后可用' : this.root.querySelector('#nitro-hint')!.textContent!;
+    item.title = this.root.querySelector('#dock-item-hint')!.textContent!;
     const route = this.root.querySelector<HTMLElement>('#route-panel')!;
     route.hidden = !snapshot.route;
     if (snapshot.route) {
@@ -467,29 +513,66 @@ export class GameUI {
     }
     const panel = this.root.querySelector<HTMLElement>('#interaction-panel')!,
       prompt = snapshot.interaction;
-    panel.hidden = !prompt;
+    const previous = this.recentInteraction;
+    if (previous && (!prompt || prompt.id !== previous.id)) {
+      if (active && previous.successes === r.successfulActions && previous.lap === r.laps) {
+        this.missedInteractionTitle = previous.title;
+        this.missedInteractionUntil = snapshot.elapsed + 1.5;
+      }
+      this.recentInteraction = null;
+    }
     if (prompt) {
+      this.recentInteraction = {
+        id: prompt.id,
+        title: prompt.title,
+        successes: r.successfulActions,
+        lap: r.laps,
+      };
+      this.missedInteractionUntil = 0;
+    }
+    const missed = !prompt && snapshot.elapsed < this.missedInteractionUntil;
+    panel.hidden = !prompt && !missed;
+    panel.classList.toggle('missed', missed);
+    panel.classList.toggle('perfect', !!prompt?.perfect && r.stun === 0);
+    panel.classList.toggle('available', !!prompt?.available && r.stun === 0);
+    const actionButton = this.root.querySelector<HTMLButtonElement>('#action-button')!;
+    actionButton.disabled = !active || r.stun > 0 || !prompt?.available;
+    if (prompt) {
+      const state =
+        r.stun > 0
+          ? '恢复中'
+          : prompt.perfect
+            ? '最佳窗口'
+            : prompt.available
+              ? '现在可按'
+              : '即将到达';
       text('#interaction-title', prompt.title);
+      text('#interaction-state', state);
       text(
         '#interaction-hint',
-        r.stun > 0
-          ? '受击恢复中 · 稍候行动'
-          : prompt.available
-            ? prompt.perfect
-              ? '完美时机 · 现在按！'
-              : prompt.distance < 0
-                ? '已过最佳点 · 立即行动'
-                : '可以行动 · 再近一点更棒'
-            : Math.round(prompt.distance) + ' m 后 · 准备按 F',
+        r.stun > 0 ? '稍候行动' : prompt.available ? '现在按 F' : '靠近后按 F',
       );
-      panel.classList.toggle('perfect', prompt.perfect && r.stun === 0);
-      panel.classList.toggle('available', prompt.available && r.stun === 0);
-      this.root.querySelector<HTMLButtonElement>('#action-button')!.disabled =
-        !active || r.stun > 0 || !prompt.available;
+      text(
+        '#interaction-detail',
+        r.stun > 0
+          ? '恢复后仍可抓住窗口'
+          : prompt.perfect
+            ? '金色时机 · 奖励更多氮气'
+            : prompt.available
+              ? prompt.distance < 0
+                ? '窗口即将关闭'
+                : '金色区域内奖励更高'
+              : Math.max(0, Math.round(prompt.distance)) + ' m · 亮起即可行动',
+      );
       this.root.querySelector<HTMLElement>('#timing-pointer')!.style.left =
         Math.max(0, Math.min(100, ((22 - prompt.distance) / 44) * 100)) + '%';
+      actionButton.title = prompt.available ? '按 F 或点击触发互动' : '先靠近互动点，亮起后按 F';
+    } else if (missed) {
+      text('#interaction-title', this.missedInteractionTitle);
+      text('#interaction-state', '已错过');
+      text('#interaction-hint', '继续向前');
+      text('#interaction-detail', '下一处再试，不影响继续比赛');
     }
-    text('#drift-label', r.boost > 0 ? '冲刺中 · 自动稳住路线' : '方向盘交给我，你来决定下一步');
   }
   private option(action: string, id: string, label: string, active: boolean, disabled = false) {
     return (
@@ -542,7 +625,7 @@ export class GameUI {
       const e = this.root.querySelector('#' + id);
       if (e && e.textContent !== text) e.textContent = text;
     };
-    set('position', snapshot.config.mode === 'time' ? '⏱' : String(rank));
+    set('position', snapshot.config.mode === 'time' ? 'TT' : String(rank));
     set('racer-count', snapshot.config.mode === 'time' ? '计时' : '/ 8');
     const lap = this.root.querySelector('#lap');
     if (lap) lap.innerHTML = Math.min(3, player.laps + 1) + ' <small>/ 3</small>';
@@ -552,10 +635,12 @@ export class GameUI {
       '最佳单圈 ' + formatTime(player.lapTimes.length ? Math.min(...player.lapTimes) : null),
     );
     set('speed', String(Math.round(Math.abs(player.speed) * 3.6)));
-    set(
-      'item-icon',
-      player.item ? ITEM_INFO[player.item].icon : snapshot.config.mode === 'time' ? '◷' : '?',
-    );
+    const itemIcon = this.root.querySelector<HTMLElement>('#item-icon');
+    const itemSymbol = player.item ?? (snapshot.config.mode === 'time' ? 'clock' : 'box');
+    if (itemIcon && itemIcon.dataset.item !== itemSymbol) {
+      itemIcon.dataset.item = itemSymbol;
+      itemIcon.innerHTML = icon(itemSymbol);
+    }
     set(
       'item-name',
       player.item

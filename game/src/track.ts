@@ -127,7 +127,8 @@ export const BOOST_PADS = [0.065, 0.37, 0.715];
 export const BRIDGE_START = 0.185;
 export const BRIDGE_END = 0.245;
 
-export const LANE_OFFSETS = [-4.6, 0, 4.6] as const;
+// Lane -1 is the driver's left; the track's positive normal points left of +Z travel.
+export const LANE_OFFSETS = [4.6, 0, -4.6] as const;
 export const ROUTE_GATES = [
   { id: 'coast', progress: 0.115 },
   { id: 'grove', progress: 0.67 },
