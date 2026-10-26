@@ -12,7 +12,8 @@
     "format": "prettier --write src test scripts index.html package.json tsconfig.json README.md VALIDATION.md",
     "format:check": "prettier --check src test scripts index.html package.json tsconfig.json README.md VALIDATION.md",
     "qa:assisted": "node scripts/assisted-qa.mjs",
-    "qa:production": "node scripts/production-qa.mjs"
+    "qa:production": "node scripts/production-qa.mjs",
+    "qa:repair": "node scripts/repair-qa.mjs"
   },
   "dependencies": {
     "three": "0.186.0"

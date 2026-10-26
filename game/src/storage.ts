@@ -27,7 +27,10 @@ export class SaveStore {
         const parsed = JSON.parse(raw);
         this.data = {
           settings: { ...DEFAULT_SETTINGS, ...parsed.settings },
-          records: parsed.records ?? {},
+          records:
+            parsed.records && typeof parsed.records === 'object' && !Array.isArray(parsed.records)
+              ? parsed.records
+              : {},
         };
       }
     } catch {
@@ -50,7 +53,13 @@ export class SaveStore {
     return (driving === 'assisted' ? 'assisted:' : '') + mode + ':' + character;
   }
   record(character: CharacterId, mode: RaceMode, driving: DrivingMode = 'manual'): PersonalRecord {
-    return this.data.records[this.recordKey(character, mode, driving)] ?? { lap: null, race: null };
+    const record = this.data.records[this.recordKey(character, mode, driving)];
+    const lap = record?.lap,
+      race = record?.race;
+    return {
+      lap: typeof lap === 'number' && Number.isFinite(lap) && lap >= 0 ? lap : null,
+      race: typeof race === 'number' && Number.isFinite(race) && race >= 0 ? race : null,
+    };
   }
   updateRecord(
     character: CharacterId,

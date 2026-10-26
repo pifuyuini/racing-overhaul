@@ -1411,10 +1411,31 @@ button:active {
     font-size: 11px;
   }
   .results-layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
   }
   .result-hero {
+    padding: 16px;
+  }
+  .result-hero img {
     display: none;
+  }
+  .result-place {
+    position: static;
+    margin-bottom: 14px;
+    font-size: 36px;
+  }
+  .result-place span {
+    display: inline-block;
+    margin: 0 0 0 8px;
+  }
+  .result-times {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .result-times strong {
+    font-size: clamp(15px, 4.5vw, 19px);
   }
   .results-panel {
     width: 100%;

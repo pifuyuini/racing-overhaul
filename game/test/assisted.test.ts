@@ -181,6 +181,32 @@ describe('accessible assisted racing', () => {
     expect(s.snapshot().pickups).toHaveLength(0);
   });
 });
+describe('assisted difficulty balance', () => {
+  it.each(CHARACTERS)('$id does not win normal difficulty without active decisions', ({ id }) => {
+    const s = make({ characterId: id, difficulty: 'normal', mode: 'race' });
+    finish(s);
+    expect(s.phase).toBe('finished');
+    expect(s.snapshot().standings[0].id).not.toBe(0);
+  });
+  it.each(CHARACTERS)(
+    '$id benefits from active decisions on hard while opponents stay competitive',
+    ({ id }) => {
+      const passive = make({ characterId: id, difficulty: 'hard', mode: 'race' });
+      const active = make({ characterId: id, difficulty: 'hard', mode: 'race' });
+      const passivePlayer = finish(passive);
+      const activePlayer = finish(active, true);
+      expect(passive.phase).toBe('finished');
+      expect(active.phase).toBe('finished');
+      expect(activePlayer.finishTime!).toBeLessThan(passivePlayer.finishTime! * 0.9);
+      const bestOpponentDistance = Math.max(
+        ...active.racers.slice(1).map((r) => r.completedDistance),
+      );
+      expect(bestOpponentDistance).toBeGreaterThan(
+        activePlayer.completedDistance - TRACK.length * 0.2,
+      );
+    },
+  );
+});
 describe('route rewards and timing interactions', () => {
   it.each(INTERACTIONS)('$title accepts one perfect action each lap', (point) => {
     const s = make(),

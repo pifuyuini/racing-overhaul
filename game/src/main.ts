@@ -85,6 +85,7 @@ function clearControls() {
   input.clear();
 }
 function pause() {
+  audio.stopRaceSounds();
   simulation.pause();
   clearControls();
   ui.show('pause');

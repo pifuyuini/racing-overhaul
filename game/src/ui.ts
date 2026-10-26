@@ -73,21 +73,21 @@ export class GameUI {
       if (action === 'character') {
         this.selected = button.dataset.id as CharacterId;
         this.store.setSettings({ characterId: this.selected });
-        this.render();
+        this.render({ action, id: button.dataset.id! });
       }
       if (action === 'mode') {
         this.mode = button.dataset.id as RaceMode;
-        this.render();
+        this.render({ action, id: button.dataset.id! });
       }
       if (action === 'difficulty') {
         this.difficulty = button.dataset.id as Difficulty;
         this.store.setSettings({ difficulty: this.difficulty });
-        this.render();
+        this.render({ action, id: button.dataset.id! });
       }
       if (action === 'driving') {
         this.driving = button.dataset.id as DrivingMode;
         this.store.setSettings({ driving: this.driving });
-        this.render();
+        this.render({ action, id: button.dataset.id! });
       }
       if (this.screen === 'playing') {
         if (action === 'drive-left') this.actions.control(-1);
@@ -162,7 +162,7 @@ export class GameUI {
       '</nav></header>'
     );
   }
-  private render() {
+  private render(focusOption?: { action: string; id: string }) {
     this.root.className = 'screen-' + this.screen;
     this.minimap = null;
     if (this.screen === 'home') {
@@ -387,7 +387,13 @@ export class GameUI {
         this.button('restart', '再来一局 ' + arrow, 'button primary') +
         '</div></section></main>';
     }
-    if (this.screen !== 'playing' && this.screen !== 'home')
+    if (focusOption)
+      this.root
+        .querySelector<HTMLButtonElement>(
+          `[data-action="${focusOption.action}"][data-id="${focusOption.id}"]`,
+        )
+        ?.focus({ preventScroll: true });
+    else if (this.screen !== 'playing' && this.screen !== 'home')
       this.root.querySelector<HTMLButtonElement>('.primary')?.focus({ preventScroll: true });
   }
   private homeControls() {

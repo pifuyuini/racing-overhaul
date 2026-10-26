@@ -297,7 +297,8 @@ export class RaceSimulation {
     const future = TRACK.at(projection.point.progress + (lookahead + 14) / TRACK.length);
     const curvature = Math.abs(angleDelta(future.yaw, projection.point.yaw));
     const base = { easy: 24.5, normal: 28, hard: 31.5 }[difficulty] + ((racer.id % 3) - 1) * 0.65;
-    const targetSpeed = clamp(base - curvature * 15, 12, base);
+    const corneringPenalty = { easy: 15, normal: 8, hard: 3 }[difficulty];
+    const targetSpeed = clamp(base - curvature * corneringPenalty, 12, base);
     const throttle = racer.speed < targetSpeed ? 1 : racer.speed > targetSpeed + 2 ? -0.45 : 0;
     let item = false;
     if (racer.item && racer.itemCooldown <= 0 && racer.aiThink > 2) {

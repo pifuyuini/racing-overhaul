@@ -193,6 +193,67 @@ describe('driving, items and lifecycle', () => {
   });
 });
 describe('personal storage', () => {
+  const storageWith = (raw: string) => ({
+    getItem: () => raw,
+    setItem: (_key: string, value: string) => {
+      raw = value;
+    },
+  });
+  it.each(['invalid', 7, null, []])('recovers a malformed records container (%j)', (records) => {
+    const storage = storageWith(JSON.stringify({ records }));
+    const save = new SaveStore(storage);
+    expect(save.record('panda', 'time', 'assisted')).toEqual({ lap: null, race: null });
+    expect(save.updateRecord('panda', 'time', 40, 120, 'assisted')).toEqual({
+      lap: true,
+      race: true,
+    });
+    expect(new SaveStore(storage).record('panda', 'time', 'assisted')).toEqual({
+      lap: 40,
+      race: 120,
+    });
+  });
+  it.each([
+    [{ lap: 35 }, { lap: 35, race: null }, { lap: 35, race: 120 }],
+    [{ race: 100 }, { lap: null, race: 100 }, { lap: 40, race: 100 }],
+  ])('repairs partial records and retains valid times (%j)', (record, before, after) => {
+    const storage = storageWith(JSON.stringify({ records: { 'time:panda': record } }));
+    const save = new SaveStore(storage);
+    expect(save.record('panda', 'time')).toEqual(before);
+    save.updateRecord('panda', 'time', 40, 120);
+    expect(new SaveStore(storage).record('panda', 'time')).toEqual(after);
+  });
+  it('replaces nonfinite, negative, nonnumeric and absent times with new results', () => {
+    const storage = storageWith(
+      '{"records":{"time:panda":{"lap":1e400,"race":-5},"assisted:time:panda":{"lap":"40","race":null}}}',
+    );
+    const save = new SaveStore(storage);
+    for (const driving of ['manual', 'assisted'] as const) {
+      expect(save.record('panda', 'time', driving)).toEqual({ lap: null, race: null });
+      expect(save.updateRecord('panda', 'time', 40, 120, driving)).toEqual({
+        lap: true,
+        race: true,
+      });
+      expect(new SaveStore(storage).record('panda', 'time', driving)).toEqual({
+        lap: 40,
+        race: 120,
+      });
+    }
+  });
+  it('preserves v1 manual keys independently from assisted records', () => {
+    const storage = storageWith(
+      JSON.stringify({
+        records: {
+          'time:panda': { lap: 38, race: 115 },
+          'assisted:time:panda': { lap: 35, race: 125 },
+        },
+      }),
+    );
+    const save = new SaveStore(storage);
+    save.updateRecord('panda', 'time', 40, 120, 'assisted');
+    const restored = new SaveStore(storage);
+    expect(restored.record('panda', 'time')).toEqual({ lap: 38, race: 115 });
+    expect(restored.record('panda', 'time', 'assisted')).toEqual({ lap: 35, race: 120 });
+  });
   it('starts with in-memory records when the localStorage getter is blocked', () => {
     const previous = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
     Object.defineProperty(globalThis, 'localStorage', {

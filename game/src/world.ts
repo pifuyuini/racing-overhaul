@@ -62,7 +62,7 @@ export class GameWorld {
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.22;
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.shadowMap.type = THREE.PCFShadowMap;
     this.scene.fog = new THREE.Fog(0xa6dad4, 170, 550);
     this.scene.add(new THREE.HemisphereLight(0xd8f5ff, 0xb69c72, 2.5));
     this.sun = new THREE.DirectionalLight(0xffecd0, 3.6);

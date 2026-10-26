@@ -89,6 +89,14 @@ export class GameAudio {
     o.start(t);
     o.stop(t + duration + 0.02);
   }
+  stopRaceSounds() {
+    if (!this.context) return;
+    const t = this.context.currentTime;
+    for (const gain of [this.engineGain, this.skid]) {
+      gain?.gain.cancelScheduledValues(t);
+      gain?.gain.setValueAtTime(0, t);
+    }
+  }
   update(speed: number, drifting: boolean, active: boolean) {
     if (!this.context) return;
     const t = this.context.currentTime;
