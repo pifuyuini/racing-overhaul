@@ -193,6 +193,7 @@ try {
   );
   await page.getByRole('button', { name: '再来一局' }).click();
   await page.waitForFunction(() => window.__PAWPRINT_TEST__.snapshot().phase === 'racing');
+  await page.evaluate(() => window.__PAWPRINT_TEST__.resetMetrics());
   console.log('Full active hard race started');
   let routeShot = false,
     actionShot = false,

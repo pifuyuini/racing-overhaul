@@ -1,4 +1,4 @@
-import type { Point, TrackPoint } from './types';
+import type { Point, TrackPoint, SurfaceKind } from './types';
 export const ROAD_WIDTH = 17;
 export const CHECKPOINTS = 12;
 export const CONTROL_POINTS: Point[] = [
@@ -150,3 +150,31 @@ export const NITRO_PICKUPS = [
 ];
 export const forwardDistance = (from: number, to: number) =>
   (mod(to - from + 0.5) - 0.5) * TRACK.length;
+
+export interface SurfaceZone {
+  id: string;
+  kind: SurfaceKind;
+  start: number;
+  end: number;
+  grip: number;
+  drag: number;
+}
+const ROAD_SURFACE: SurfaceZone = { id: 'road', kind: 'road', start: 0, end: 1, grip: 1, drag: 0 };
+export const SURFACE_ZONES: readonly SurfaceZone[] = [
+  { id: 'bridge', kind: 'wood', start: BRIDGE_START, end: BRIDGE_END, grip: 0.94, drag: 0.1 },
+  { id: 'canyon', kind: 'sand', start: 0.465, end: 0.555, grip: 0.72, drag: 1.15 },
+  { id: 'tidal', kind: 'wet', start: 0.76, end: 0.805, grip: 0.56, drag: 0.3 },
+];
+export const WIND_ZONE = { start: 0.845, end: 0.905, strength: 2.6 } as const;
+export function surfaceAt(progress: number, offset = 0): SurfaceZone {
+  if (Math.abs(offset) > ROAD_WIDTH / 2 + 0.8)
+    return { id: 'verge', kind: 'sand', start: 0, end: 1, grip: 0.58, drag: 4.5 };
+  const p = mod(progress);
+  return SURFACE_ZONES.find((zone) => p >= zone.start && p <= zone.end) ?? ROAD_SURFACE;
+}
+
+// World guardrails and kart contact use the same physical rail offsets.
+export function barrierOffsetAt(progress: number) {
+  const p = mod(progress);
+  return ROAD_WIDTH / 2 + (p >= BRIDGE_START && p <= BRIDGE_END ? 1 : 5);
+}

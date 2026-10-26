@@ -285,6 +285,14 @@ try {
     window.__PAWPRINT_TEST__.snapshot().racers[0].stun = 1;
   });
   await frame();
+  await page.waitForFunction(
+    () =>
+      document.querySelector('#interaction-state').textContent === '恢复中' &&
+      document.querySelector('#action-button').disabled &&
+      document.querySelector('[data-action="nitro"]').disabled,
+    undefined,
+    { timeout: 1000 },
+  );
   check(
     'recovering prompt and nitro are disabled',
     (await page.locator('#interaction-state').textContent()) === '恢复中' &&
@@ -361,6 +369,20 @@ try {
     }),
   );
 } catch (error) {
+  report.failureState = await page.evaluate(() => {
+    const s = window.__PAWPRINT_TEST__.snapshot(),
+      r = s.racers[0];
+    return {
+      phase: s.phase,
+      interaction: s.interaction,
+      progress: r.progress,
+      speed: r.speed,
+      stun: r.stun,
+      state: document.querySelector('#interaction-state')?.textContent,
+      actionDisabled: document.querySelector('#action-button')?.disabled,
+      nitroDisabled: document.querySelector('[data-action="nitro"]')?.disabled,
+    };
+  });
   report.failure = error.stack;
   await shot('failure');
   console.error(error);

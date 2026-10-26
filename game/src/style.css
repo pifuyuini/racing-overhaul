@@ -633,6 +633,37 @@ button:active {
   display: inline-block;
   white-space: nowrap;
 }
+.item-guide {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0 0 18px;
+}
+.item-guide > div {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 6px;
+  background: #e6eee0;
+  border-radius: 9px;
+  color: #2d756d;
+}
+.item-guide .ui-icon {
+  width: 20px;
+  height: 20px;
+}
+.item-guide span {
+  font-size: 10px;
+  font-weight: 700;
+}
+.item-guide small {
+  display: block;
+  font-size: 8px;
+  font-weight: 400;
+  line-height: 1.5;
+  margin-top: 3px;
+  color: #61776c;
+}
 .help-note {
   font-size: 12px;
   color: #6f7e71;
@@ -826,6 +857,8 @@ button:active {
   height: 163px;
 }
 .item-widget {
+  color: var(--cream);
+  text-align: left;
   position: absolute;
   left: 35px;
   top: 145px;
@@ -867,6 +900,16 @@ button:active {
   font-size: 9px;
   padding: 2px 4px;
   min-width: 20px;
+}
+.item-widget:disabled:hover {
+  transform: none;
+}
+.item-widget > div > small {
+  display: block;
+  margin-top: 5px;
+  font-size: 10px;
+  line-height: 1.5;
+  color: #c4dbcb;
 }
 .item-widget.has-item .item-icon {
   background: var(--yellow);
@@ -1808,7 +1851,7 @@ button:active {
 .assisted-hud .race-tip {
   display: none;
 }
-.assisted-hud .race-message {
+.race-hud .race-message {
   top: 106px;
   font-size: 15px;
   letter-spacing: 0.5px;
@@ -1816,32 +1859,129 @@ button:active {
   border-radius: 12px;
   background: #173f49d9;
 }
-.assisted-hud .race-message:empty {
+.race-hud .race-message:empty {
   display: none;
 }
 .assisted-hud #drift-label {
   display: none;
 }
-.assisted-hud .map-widget {
+.race-hud .map-widget {
   width: 170px;
   height: 148px;
   padding: 12px 8px 0;
   border-radius: 18px;
   transform: none;
 }
-.assisted-hud .map-widget canvas {
+.race-hud .map-widget canvas {
   width: 152px;
   height: 127px;
 }
-.assisted-hud .speed-widget {
+.race-hud .speed-widget {
   min-width: 130px;
 }
-.assisted-hud .speed-widget strong {
+.race-hud .speed-widget strong {
   font-size: 52px;
 }
 .item-icon .ui-icon {
   width: 28px;
   height: 28px;
+}
+.driving-status {
+  position: absolute;
+  top: 132px;
+  left: 30px;
+  width: 230px;
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: 8px 9px;
+  padding: 11px 12px;
+  color: #ecf4da;
+  text-shadow: none;
+  background: #123d49e8;
+  border: 1px solid #b9e4ce66;
+  border-radius: 15px;
+  backdrop-filter: blur(8px);
+}
+#vehicle-status-icon {
+  color: #97e7cf;
+  padding-top: 2px;
+}
+.driving-status strong {
+  display: block;
+  font-size: 13px;
+  line-height: 1.5;
+}
+#vehicle-advice {
+  display: block;
+  margin-top: 2px;
+  font-size: 10px;
+  line-height: 1.5;
+  color: #c1d8c6;
+}
+.surface-grip {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 9px;
+  color: #b7d3c5;
+}
+.surface-grip > span:nth-child(2) {
+  margin-left: auto;
+}
+.surface-grip b {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.surface-grip > i {
+  display: block;
+  width: 42px;
+  height: 4px;
+  border-radius: 4px;
+  background: #c6e0ce30;
+  overflow: hidden;
+}
+#grip-fill {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #9de6c6;
+  border-radius: inherit;
+  transition: width 0.15s;
+}
+.driving-status.airborne {
+  border-color: #a4d3ffb3;
+}
+.driving-status.warning {
+  border-color: #ffda67b3;
+}
+.driving-status.warning #vehicle-status-icon {
+  color: #ffdf83;
+}
+.driving-status.danger {
+  border-color: #ffad87;
+  background: #583c3dec;
+}
+.driving-status.danger #vehicle-status-icon,
+.driving-status.danger strong {
+  color: #ffcf9e;
+}
+.manual-hud .item-widget {
+  top: auto;
+  bottom: 190px;
+  left: 30px;
+  width: 230px;
+  min-width: 0;
+  border-color: #ffdb657d;
+}
+.manual-hud .item-widget:disabled {
+  border-color: #c7dec34d;
+}
+.manual-hud .item-widget.has-item:not(:disabled) {
+  border-color: #ffe48e;
+}
+.manual-hud .item-widget .item-icon {
+  flex-shrink: 0;
 }
 .route-panel,
 .interaction-panel {
@@ -1855,6 +1995,9 @@ button:active {
   padding: 12px;
   text-shadow: none;
   box-shadow: 0 8px 28px #12435133;
+}
+.route-panel {
+  top: 232px;
 }
 .route-panel p,
 .interaction-panel p {
@@ -2068,17 +2211,17 @@ button:active {
   }
 }
 @media (max-width: 1100px) {
-  .assisted-hud .map-widget {
+  .race-hud .map-widget {
     bottom: 127px;
     transform: scale(0.8);
     transform-origin: bottom left;
   }
-  .assisted-hud .speed-widget {
+  .race-hud .speed-widget {
     bottom: 138px;
     right: 24px;
     min-width: 110px;
   }
-  .assisted-hud .speed-widget strong {
+  .race-hud .speed-widget strong {
     font-size: 44px;
   }
 }
@@ -2183,16 +2326,16 @@ button:active {
   .item-control strong {
     font-size: 10px;
   }
-  .assisted-hud .map-widget {
+  .race-hud .map-widget {
     bottom: 115px;
     left: 13px;
     transform: scale(0.55);
   }
-  .assisted-hud .speed-widget {
+  .race-hud .speed-widget {
     bottom: 125px;
     right: 17px;
   }
-  .assisted-hud .speed-widget strong {
+  .race-hud .speed-widget strong {
     font-size: 43px;
   }
   .assisted-hud #drift-label {
@@ -2206,9 +2349,62 @@ button:active {
     padding: 10px;
     border-radius: 13px;
   }
-  .route-panel {
+  .driving-status {
+    top: 119px;
     left: 12px;
     width: min(43%, 175px);
+    grid-template-columns: 19px minmax(0, 1fr);
+    padding: 9px;
+    gap: 6px;
+    border-radius: 12px;
+  }
+  #vehicle-status-icon .ui-icon {
+    width: 19px;
+    height: 19px;
+  }
+  .driving-status strong {
+    font-size: 11px;
+  }
+  #vehicle-advice {
+    font-size: 9px;
+  }
+  .surface-grip {
+    gap: 5px;
+    font-size: 8px;
+  }
+  .surface-grip > i {
+    width: 28px;
+  }
+  .route-panel {
+    top: 222px;
+    left: 12px;
+    width: min(43%, 175px);
+  }
+  .manual-hud .item-widget {
+    bottom: 210px;
+    left: 12px;
+    width: min(43%, 190px);
+    gap: 7px;
+    padding: 9px;
+  }
+  .manual-hud .item-widget > div:last-child {
+    display: block;
+  }
+  .manual-hud .item-widget .item-icon {
+    width: 32px;
+    height: 38px;
+  }
+  .manual-hud .item-widget strong {
+    font-size: 10px;
+  }
+  .manual-hud .item-widget > div > small {
+    font-size: 9px;
+  }
+  .manual-hud .item-widget kbd {
+    font-size: 8px;
+  }
+  .item-guide {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   .route-panel > div {
     gap: 5px;
@@ -2241,7 +2437,7 @@ button:active {
   .interaction-panel strong {
     font-size: 11px;
   }
-  .assisted-hud .race-message {
+  .race-hud .race-message {
     top: 91px;
     font-size: 11px;
     padding: 7px 10px;
@@ -2281,23 +2477,36 @@ button:active {
   .assisted-hud .position-widget strong {
     font-size: 51px;
   }
-  .assisted-hud .interaction-panel,
-  .assisted-hud .route-panel {
+  .race-hud .interaction-panel {
     top: 110px;
     width: 215px;
   }
-  .assisted-hud .map-widget {
+  .race-hud .driving-status {
+    top: 110px;
+    width: 215px;
+  }
+  .race-hud .route-panel {
+    top: 214px;
+    width: 215px;
+  }
+  .race-hud .map-widget {
     transform: scale(0.6);
     bottom: 20px;
   }
-  .assisted-hud .speed-widget {
+  .race-hud .speed-widget {
     bottom: 30px;
   }
   .assisted-hud .drive-dock {
     bottom: 15px;
   }
-  .assisted-hud .race-message {
+  .race-hud .race-message {
     top: 80px;
     font-size: 12px;
+  }
+}
+
+@media (max-width: 440px) {
+  .item-guide {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

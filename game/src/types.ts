@@ -2,7 +2,8 @@ export type CharacterId = 'panda' | 'capybara' | 'fox' | 'penguin';
 export type Difficulty = 'easy' | 'normal' | 'hard';
 export type RaceMode = 'race' | 'time';
 export type Quality = 'low' | 'medium' | 'high';
-export type ItemType = 'boost' | 'shield' | 'water' | 'banana';
+export type ItemType = 'boost' | 'shield' | 'water' | 'banana' | 'homing' | 'pulse' | 'oil';
+export type SurfaceKind = 'road' | 'sand' | 'wood' | 'wet';
 export type DrivingMode = 'assisted' | 'manual';
 export type Lane = -1 | 0 | 1;
 export type InteractionKind = 'jump' | 'drift' | 'spin';
@@ -60,7 +61,7 @@ export const CHARACTERS: Character[] = [
     speed: 31,
     acceleration: 17,
     handling: 1.02,
-    description: '均衡灵巧，每一个弯都刚刚好。',
+    description: '均衡偏稳，入弯灵巧，也能稳住碰撞。',
   },
   {
     id: 'capybara',
@@ -71,7 +72,7 @@ export const CHARACTERS: Character[] = [
     speed: 32,
     acceleration: 15.5,
     handling: 0.95,
-    description: '稳稳向前，直道是我的主场。',
+    description: '重量更足，抗撞稳当，直道是我的主场。',
   },
   {
     id: 'fox',
@@ -82,7 +83,7 @@ export const CHARACTERS: Character[] = [
     speed: 31.5,
     acceleration: 16,
     handling: 1.07,
-    description: '轻快入弯，把海风甩在身后。',
+    description: '轻灵入弯，侧撞更容易偏移，留意身旁对手。',
   },
   {
     id: 'penguin',
@@ -93,14 +94,17 @@ export const CHARACTERS: Character[] = [
     speed: 30.5,
     acceleration: 19,
     handling: 1,
-    description: '起步飞快，滑行是天生本领。',
+    description: '起步飞快，中等重量，滑行是天生本领。',
   },
 ];
 export const ITEM_INFO: Record<ItemType, { name: string; icon: string; description: string }> = {
   boost: { name: '加速果汁', icon: 'boost', description: '一口热带能量，短时冲刺' },
   shield: { name: '泡泡护盾', icon: 'shield', description: '挡住一次攻击，持续 6 秒' },
   water: { name: '前向水球', icon: 'water', description: '向前发射，命中对手使其减速' },
-  banana: { name: '香蕉皮', icon: 'banana', description: '留在身后，让追兵打个滑' },
+  banana: { name: '香蕉皮', icon: 'banana', description: '留在身后，命中追兵造成短暂眩晕' },
+  homing: { name: '追踪海螺', icon: 'homing', description: '有限转弯追踪前方对手，急转换线可躲开' },
+  pulse: { name: '潮汐冲击', icon: 'pulse', description: '近身扩散冲击，推开周围对手' },
+  oil: { name: '墨汁陷阱', icon: 'oil', description: '留下低抓地墨迹，换线或跳跃可避开' },
 };
 export interface Racer {
   id: number;
@@ -114,6 +118,17 @@ export interface Racer {
   previousYaw: number;
   speed: number;
   velocityYaw: number;
+  lateralSpeed: number;
+  heightOffset: number;
+  previousHeightOffset: number;
+  verticalSpeed: number;
+  surface: SurfaceKind;
+  grip: number;
+  slipTime: number;
+  impactTime: number;
+  impactStrength: number;
+  landingTime: number;
+  acceleration: number;
   steer: number;
   progress: number;
   lastProgress: number;
@@ -149,7 +164,11 @@ export interface Racer {
 }
 export interface Projectile extends Point {
   id: number;
-  type: 'water' | 'banana';
+  type: 'water' | 'banana' | 'homing' | 'pulse' | 'oil';
+  targetId?: number;
+  radius?: number;
+  hitRacers?: number[];
+  heightOffset?: number;
   owner: number;
   yaw: number;
   ttl: number;
@@ -174,9 +193,20 @@ export interface RaceEvent {
     | 'nitro'
     | 'charge'
     | 'route'
-    | 'interaction';
+    | 'interaction'
+    | 'collision'
+    | 'launch'
+    | 'land'
+    | 'item-use'
+    | 'slip'
+    | 'shield-block';
   racerId: number;
   value?: number | string;
+  otherId?: number;
+  itemType?: ItemType;
+  strength?: number;
+  x?: number;
+  z?: number;
 }
 export interface RoutePrompt {
   id: string;

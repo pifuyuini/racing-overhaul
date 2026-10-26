@@ -34,6 +34,9 @@ let accumulator = 0,
   frameCount = 0,
   frameDurations: number[] = [];
 let testAutoDrive = false;
+let eventCounts: Record<string, number> = {},
+  playerEventCounts: Record<string, number> = {},
+  itemCounts: Record<string, number> = {};
 const FIXED = 1 / 60;
 const input = new KeyboardInput(() => {
   if (ui.screen === 'playing') pause();
@@ -42,6 +45,7 @@ const input = new KeyboardInput(() => {
 const ui = new GameUI(root, store, world.portraits(), {
   control: (action) => input.trigger(action),
   start: (next) => {
+    audio.stopRaceSounds();
     config = next;
     simulation = new RaceSimulation(config);
     accumulator = 0;
@@ -53,6 +57,7 @@ const ui = new GameUI(root, store, world.portraits(), {
   pause,
   resume,
   restart: () => {
+    audio.stopRaceSounds();
     simulation = new RaceSimulation(config);
     clearControls();
     input.active = true;
@@ -61,6 +66,7 @@ const ui = new GameUI(root, store, world.portraits(), {
     ui.show('playing');
   },
   home: () => {
+    audio.stopRaceSounds();
     input.active = false;
     clearControls();
     simulation = new RaceSimulation({
@@ -143,11 +149,23 @@ function frame(nowMs: number) {
     }
   }
   const events = simulation.drainEvents();
+  if (import.meta.env.DEV && playing) {
+    for (const event of events) {
+      eventCounts[event.type] = (eventCounts[event.type] ?? 0) + 1;
+      if (event.racerId !== 0) continue;
+      playerEventCounts[event.type] = (playerEventCounts[event.type] ?? 0) + 1;
+      if (event.type === 'item-use') {
+        const item = String(event.itemType ?? event.value);
+        itemCounts[item] = (itemCounts[item] ?? 0) + 1;
+      }
+    }
+  }
   if (playing) {
     audio.events(events);
     ui.events(events, now);
   }
   const snapshot = simulation.snapshot();
+  if (playing || demo) world.events(events);
   ui.update(snapshot, now);
   if (playing && simulation.phase === 'finished') {
     input.active = false;
@@ -165,11 +183,7 @@ function frame(nowMs: number) {
         ? 'race'
         : 'menu',
   );
-  audio.update(
-    snapshot.racers[0].speed,
-    snapshot.racers[0].drifting,
-    playing && snapshot.phase === 'racing',
-  );
+  audio.update(snapshot.racers[0], playing && snapshot.phase === 'racing');
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
@@ -177,6 +191,8 @@ if (import.meta.env.DEV) {
   Object.assign(window, {
     __PAWPRINT_TEST__: {
       snapshot: () => simulation.snapshot(),
+      visuals: () => world.getVisualState(),
+      settleView: () => world.resetCamera(false),
       camera: () => ({
         view: world.camera.matrixWorldInverse.toArray(),
         projection: world.camera.projectionMatrix.toArray(),
@@ -192,11 +208,17 @@ if (import.meta.env.DEV) {
       },
       stats: () => ({
         ...world.getStats(),
+        events: { ...eventCounts },
+        playerEvents: { ...playerEventCounts },
+        items: { ...itemCounts },
         averageFrameMs:
           frameDurations.reduce((a, b) => a + b, 0) / Math.max(1, frameDurations.length),
       }),
       resetMetrics: () => {
         frameDurations = [];
+        eventCounts = {};
+        playerEventCounts = {};
+        itemCounts = {};
       },
       giveItem: (item: import('./types').ItemType) => {
         simulation.racers[0].item = item;

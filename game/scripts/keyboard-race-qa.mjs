@@ -38,7 +38,8 @@ try {
     let lastProgressAt = started,
       lastLap = -1,
       nextShot = 25,
-      peakGeometry = 0;
+      peakGeometry = 0,
+      peakHeight = 0;
     while (Date.now() - started < 270000) {
       const state = await page.evaluate(() => {
         const t = window.__PAWPRINT_TEST__,
@@ -50,6 +51,8 @@ try {
           lap: r.laps,
           progress: r.progress,
           speed: r.speed,
+          heightOffset: r.heightOffset,
+          interaction: s.interaction,
           controls: t.recommendControls(),
           stats: t.stats(),
           finished: s.racers.map((r) => r.finishTime),
@@ -58,6 +61,7 @@ try {
         };
       });
       peakGeometry = Math.max(peakGeometry, state.stats.geometries);
+      peakHeight = Math.max(peakHeight, state.heightOffset);
       if (state.phase === 'finished') {
         reports.push({
           difficulty,
@@ -69,6 +73,10 @@ try {
           drawCalls: state.stats.calls,
           triangles: state.stats.triangles,
           peakGeometry,
+          peakHeight,
+          events: state.stats.events,
+          playerEvents: state.stats.playerEvents,
+          items: state.stats.items,
           opponentFinishTimes: state.finished.slice(1),
         });
         console.log(JSON.stringify({ event: 'finished', ...reports.at(-1) }));
@@ -104,6 +112,7 @@ try {
           held.add(key);
         }
       if (state.controls.item) await page.keyboard.press('KeyE');
+      if (state.interaction?.perfect) await page.keyboard.press('KeyF');
       if (state.speed > 2) lastProgressAt = Date.now();
       else if (Date.now() - lastProgressAt > 5000) {
         await page.keyboard.press('KeyR');

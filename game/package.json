@@ -14,7 +14,8 @@
     "qa:assisted": "node scripts/assisted-qa.mjs",
     "qa:production": "node scripts/production-qa.mjs",
     "qa:repair": "node scripts/repair-qa.mjs",
-    "qa:controls": "node scripts/controls-qa.mjs"
+    "qa:controls": "node scripts/controls-qa.mjs",
+    "qa:overhaul": "node scripts/overhaul-qa.mjs"
   },
   "dependencies": {
     "three": "0.186.0"

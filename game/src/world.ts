@@ -11,6 +11,10 @@ import {
   ROUTE_GATES,
   INTERACTIONS,
   NITRO_PICKUPS,
+  SURFACE_ZONES,
+  WIND_ZONE,
+  clamp,
+  barrierOffsetAt,
 } from './track';
 import {
   createKart,
@@ -22,8 +26,9 @@ import {
   disposeModel,
 } from './models';
 import type { KartModel } from './models';
-import type { RaceSnapshot, Quality, CharacterId } from './types';
-const up = new THREE.Vector3(0, 1, 0);
+import type { RaceSnapshot, Quality, CharacterId, RaceEvent, Projectile } from './types';
+const PARTICLE_COUNT = 420;
+const MARK_COUNT = 360;
 export class GameWorld {
   readonly renderer: THREE.WebGLRenderer;
   readonly scene = new THREE.Scene();
@@ -38,16 +43,35 @@ export class GameWorld {
   private boxes: THREE.Mesh[] = [];
   private projectileMeshes = new Map<number, THREE.Group>();
   private particles: THREE.Points;
-  private particlePositions = new Float32Array(180 * 3);
-  private particleColors = new Float32Array(180 * 3);
-  private particleLife = new Float32Array(180);
-  private particleVelocity = new Float32Array(180 * 3);
+  private particlePositions = new Float32Array(PARTICLE_COUNT * 3);
+  private particleColors = new Float32Array(PARTICLE_COUNT * 3);
+  private particleLife = new Float32Array(PARTICLE_COUNT);
+  private particleVelocity = new Float32Array(PARTICLE_COUNT * 3);
   private nextParticle = 0;
+  private particleGravity = new Float32Array(PARTICLE_COUNT);
+  private marks: THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial>;
+  private markPositions = new Float32Array(MARK_COUNT * 18);
+  private markAlphas = new Float32Array(MARK_COUNT * 6);
+  private markColors = new Float32Array(MARK_COUNT * 18);
+  private markLife = new Float32Array(MARK_COUNT);
+  private nextMark = 0;
+  private trailLast = new Map<number, THREE.Vector3[]>();
+  private effectRings: {
+    mesh: THREE.Mesh<THREE.RingGeometry, THREE.MeshBasicMaterial>;
+    life: number;
+    duration: number;
+    endScale: number;
+    ground: boolean;
+  }[] = [];
+  private nextRing = 0;
+  private windRibbons: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshStandardMaterial>[] = [];
+  private windEmission = 0;
   private quality: Quality | null = null;
   private cameraReady = false;
   private cameraHeading = 0;
   private cameraTarget = new THREE.Vector3();
   private lastTime = 0;
+  private visualTime = 0;
   private staticRoot = new THREE.Group();
   private flagMeshes: THREE.Mesh[] = [];
   private assistedRoot = new THREE.Group();
@@ -112,6 +136,17 @@ export class GameWorld {
     this.createScenery();
     batchStatic(this.staticRoot);
     this.createAssistedFeatures();
+    const particleCanvas = document.createElement('canvas');
+    particleCanvas.width = particleCanvas.height = 64;
+    const particleContext = particleCanvas.getContext('2d')!,
+      particleGradient = particleContext.createRadialGradient(32, 32, 0, 32, 32, 31);
+    particleGradient.addColorStop(0, 'rgba(255,255,255,.9)');
+    particleGradient.addColorStop(0.38, 'rgba(255,255,255,.55)');
+    particleGradient.addColorStop(1, 'rgba(255,255,255,0)');
+    particleContext.fillStyle = particleGradient;
+    particleContext.fillRect(0, 0, 64, 64);
+    const particleTexture = new THREE.CanvasTexture(particleCanvas);
+    particleTexture.colorSpace = THREE.SRGBColorSpace;
     const particleGeo = new THREE.BufferGeometry();
     particleGeo.setAttribute('position', new THREE.BufferAttribute(this.particlePositions, 3));
     particleGeo.setAttribute('color', new THREE.BufferAttribute(this.particleColors, 3));
@@ -119,6 +154,8 @@ export class GameWorld {
       particleGeo,
       new THREE.PointsMaterial({
         size: 0.3,
+        map: particleTexture,
+        alphaTest: 0.01,
         vertexColors: true,
         transparent: true,
         opacity: 0.8,
@@ -129,6 +166,44 @@ export class GameWorld {
     this.particles.frustumCulled = false;
     this.scene.add(this.particles);
     this.particlePositions.fill(-999);
+    const markGeometry = new THREE.BufferGeometry();
+    markGeometry.setAttribute('position', new THREE.BufferAttribute(this.markPositions, 3));
+    markGeometry.setAttribute('alpha', new THREE.BufferAttribute(this.markAlphas, 1));
+    markGeometry.setAttribute('color', new THREE.BufferAttribute(this.markColors, 3));
+    this.marks = new THREE.Mesh(
+      markGeometry,
+      new THREE.ShaderMaterial({
+        transparent: true,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+        polygonOffset: true,
+        polygonOffsetFactor: -1,
+        uniforms: THREE.UniformsUtils.merge([THREE.UniformsLib.fog]),
+        fog: true,
+        vertexShader:
+          '#include <fog_pars_vertex>\nattribute float alpha;attribute vec3 color;varying float opacity;varying vec3 tint;void main(){opacity=alpha;tint=color;vec4 mvPosition=modelViewMatrix*vec4(position,1.);gl_Position=projectionMatrix*mvPosition;\n#include <fog_vertex>\n}',
+        fragmentShader:
+          '#include <fog_pars_fragment>\nvarying float opacity;varying vec3 tint;void main(){gl_FragColor=vec4(tint,opacity*.43);\n#include <fog_fragment>\n#include <tonemapping_fragment>\n#include <colorspace_fragment>\n}',
+      }),
+    );
+    this.marks.frustumCulled = false;
+    this.scene.add(this.marks);
+    const ringGeometry = new THREE.RingGeometry(0.82, 1, 40);
+    for (let i = 0; i < 12; i++) {
+      const mesh = new THREE.Mesh(
+        ringGeometry,
+        new THREE.MeshBasicMaterial({
+          color: 0xbaffee,
+          transparent: true,
+          opacity: 0,
+          depthWrite: false,
+          side: THREE.DoubleSide,
+        }),
+      );
+      mesh.visible = false;
+      this.scene.add(mesh);
+      this.effectRings.push({ mesh, life: 0, duration: 1, endScale: 1, ground: true });
+    }
     this.setQuality('medium');
     window.addEventListener('resize', () => this.resize());
     this.resize();
@@ -171,7 +246,8 @@ export class GameWorld {
       group.rotation.y = p.yaw;
       fixed.add(group);
       // Painted approach stripes and a timing ring are non-colliding invitations.
-      for (let j = 0; j < 3; j++) box(group, gold, 0, 0.085, -j * 3, 14 - j, 0.05, 0.35, 0);
+      if (point.kind !== 'jump')
+        for (let j = 0; j < 3; j++) box(group, gold, 0, 0.085, -j * 3, 14 - j, 0.05, 0.35, 0);
       const ring = new THREE.Mesh(
         new THREE.RingGeometry(3.7, 4, 36),
         new THREE.MeshBasicMaterial({
@@ -238,7 +314,7 @@ export class GameWorld {
     }
   }
   private updateAssistedFeatures(snapshot: RaceSnapshot, time: number, visible: boolean) {
-    this.assistedRoot.visible = visible && snapshot.config.driving !== 'manual';
+    this.assistedRoot.visible = visible;
     if (!this.assistedRoot.visible) return;
     const player = snapshot.racers[0];
     this.interactionRings.forEach((ring, i) => {
@@ -259,6 +335,7 @@ export class GameWorld {
       }
     });
     this.laneArrows.forEach((mesh, i) => {
+      mesh.visible = snapshot.config.driving !== 'manual';
       const p = TRACK.at(
         player.progress + (8 + i * 4) / TRACK.length,
         LANE_OFFSETS[player.targetLane + 1],
@@ -374,6 +451,113 @@ export class GameWorld {
     this.staticRoot.add(mesh);
     return mesh;
   }
+  private createSurfaceFeatures() {
+    const sandCanvas = document.createElement('canvas');
+    sandCanvas.width = sandCanvas.height = 256;
+    const ctx = sandCanvas.getContext('2d')!;
+    ctx.fillStyle = '#d7b47b';
+    ctx.fillRect(0, 0, 256, 256);
+    for (let i = 0; i < 150; i++) {
+      const x = mod(i * 59.3, 256),
+        y = mod(i * 37.7, 256);
+      ctx.strokeStyle = i % 3 === 0 ? '#c59e66' : '#dfc18c';
+      ctx.lineWidth = i % 3 === 0 ? 1.6 : 0.7;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.quadraticCurveTo(x + 2, y + 8, x - 1, y + 17 + (i % 9));
+      ctx.stroke();
+    }
+    const texture = new THREE.CanvasTexture(sandCanvas);
+    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+    texture.colorSpace = THREE.SRGBColorSpace;
+    const sand = new THREE.MeshStandardMaterial({ color: 0xfff3cd, map: texture, roughness: 1 }),
+      wet = new THREE.MeshStandardMaterial({ color: 0x759f9f, roughness: 0.16, metalness: 0.23 }),
+      glint = new THREE.MeshBasicMaterial({
+        color: 0xc6eee4,
+        transparent: true,
+        opacity: 0.22,
+        depthWrite: false,
+      });
+    for (const zone of SURFACE_ZONES) {
+      if (zone.kind === 'wood') continue;
+      this.ribbon(ROAD_WIDTH, 0, zone.kind === 'sand' ? sand : wet, 0.015, zone.start, zone.end);
+      if (zone.kind === 'wet')
+        for (const offset of [-6.3, -2.7, 1.5, 5.6])
+          this.ribbon(0.06, offset, glint, 0.023, zone.start + 0.001, zone.end - 0.001);
+    }
+    const jump = INTERACTIONS.find((point) => point.kind === 'jump')!;
+    const gold = material(0xffd777),
+      wood = material(0x73563d);
+    for (const distance of [-10, -6, -2]) {
+      const progress = jump.progress + distance / TRACK.length;
+      this.ribbon(
+        11.5,
+        0,
+        gold,
+        0.028,
+        progress - 0.16 / TRACK.length,
+        progress + 0.16 / TRACK.length,
+      );
+    }
+    // The launch deck stays flush with the physical track; the wedge is structural support below it.
+    const launch = TRACK.at(jump.progress - 0.004),
+      support = new THREE.Group();
+    support.position.set(launch.x, launch.y - 0.025, launch.z);
+    support.rotation.y = launch.yaw;
+    for (const side of [-1, 1]) {
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute(
+        'position',
+        new THREE.Float32BufferAttribute(
+          [side * 5.9, 0, -4.8, side * 5.9, 0, 4.8, side * 5.9, -0.52, -4.8],
+          3,
+        ),
+      );
+      geometry.computeVertexNormals();
+      const mat = material(0x8f6847);
+      mat.side = THREE.DoubleSide;
+      support.add(new THREE.Mesh(geometry, mat));
+    }
+    this.staticRoot.add(support);
+    const landing = jump.progress + 33 / TRACK.length;
+    for (const side of [-1, 1]) {
+      const p = TRACK.at(landing, side * 7.4);
+      cylinder(this.staticRoot, wood, p.x, p.y + 1.15, p.z, 0.085, 0.12, 2.3, 7);
+      const flag = box(this.staticRoot, gold, p.x, p.y + 2.05, p.z, 0.9, 0.45, 0.06, 0.03);
+      flag.rotation.y = p.yaw;
+      this.ribbon(0.16, side * 6.6, gold, 0.035, landing - 0.003, landing + 0.004);
+    }
+    const post = material(0x8b7353),
+      ribbonMaterial = new THREE.MeshStandardMaterial({
+        color: 0xc3f2df,
+        roughness: 0.7,
+        side: THREE.DoubleSide,
+      });
+    for (let p = WIND_ZONE.start; p <= WIND_ZONE.end; p += 0.012) {
+      for (const side of [-1, 1]) {
+        const at = TRACK.at(p, side * 10.1);
+        cylinder(this.staticRoot, post, at.x, at.y + 2.3, at.z, 0.06, 0.09, 4.6, 6);
+        const ribbon = new THREE.Mesh(
+          new THREE.PlaneGeometry(2.8, 0.32, 10, 1).translate(1.4, 0, 0),
+          ribbonMaterial,
+        );
+        ribbon.position.set(at.x, at.y + 4.2, at.z);
+        ribbon.rotation.y = at.yaw;
+        this.scene.add(ribbon);
+        this.windRibbons.push(ribbon);
+      }
+    }
+    for (const progress of [WIND_ZONE.start, WIND_ZONE.end]) {
+      const p = TRACK.at(progress),
+        arch = new THREE.Mesh(
+          new THREE.TorusGeometry(9.1, 0.075, 5, 36, Math.PI),
+          new THREE.MeshBasicMaterial({ color: 0x9ce9d5, transparent: true, opacity: 0.46 }),
+        );
+      arch.position.set(p.x, p.y + 0.2, p.z);
+      arch.rotation.y = p.yaw;
+      this.staticRoot.add(arch);
+    }
+  }
   private createRoad() {
     const canvas = document.createElement('canvas');
     canvas.width = canvas.height = 128;
@@ -395,7 +579,9 @@ export class GameWorld {
     texture.anisotropy = 8;
     const road = new THREE.MeshStandardMaterial({ map: texture, roughness: 1, color: 0xfff8df });
     this.ribbon(ROAD_WIDTH + 6, 0, material(0xd8b983), -0.09);
-    this.ribbon(ROAD_WIDTH, 0, road, 0);
+    this.ribbon(ROAD_WIDTH, 0, road, 0, 0, BRIDGE_START);
+    this.ribbon(ROAD_WIDTH, 0, road, 0, BRIDGE_END, 1);
+    this.createSurfaceFeatures();
     const orange = material(0xe88862),
       cream = material(0xffefcf);
     for (const side of [-1, 1]) {
@@ -410,35 +596,52 @@ export class GameWorld {
           (i + 1) / 150,
         );
     }
-    const bridgeMat = material(0xa77e51),
-      railMat = material(0xe0bf80);
-    for (
-      let i = Math.floor(BRIDGE_START * TRACK.length);
-      i < BRIDGE_END * TRACK.length;
-      i += 1.15
-    ) {
-      const p = TRACK.at(i / TRACK.length);
-      const plank = box(
-        this.staticRoot,
-        bridgeMat,
-        p.x,
-        p.y + 0.045,
-        p.z,
-        ROAD_WIDTH,
-        0.12,
-        1.03,
-        0.02,
-      );
-      plank.rotation.y = p.yaw;
+    const plankCanvas = document.createElement('canvas');
+    plankCanvas.width = plankCanvas.height = 256;
+    const plankContext = plankCanvas.getContext('2d')!;
+    for (let row = 0; row < 4; row++) {
+      const y = row * 64;
+      plankContext.fillStyle = ['#a77e51', '#ae8658', '#a07a50', '#b18a5b'][row];
+      plankContext.fillRect(0, y, 256, 64);
+      for (let grain = 0; grain < 10; grain++) {
+        plankContext.strokeStyle = grain % 2 ? 'rgba(70,44,25,.12)' : 'rgba(255,231,182,.1)';
+        const gy = y + 6 + grain * 5.3;
+        plankContext.beginPath();
+        plankContext.moveTo(0, gy);
+        plankContext.bezierCurveTo(80, gy + 2, 176, gy - 2, 256, gy + (row % 2 ? 1 : -1));
+        plankContext.stroke();
+      }
+      plankContext.fillStyle = '#725336';
+      plankContext.fillRect(0, y + 62.5, 256, 1.5);
     }
+    const plankTexture = new THREE.CanvasTexture(plankCanvas);
+    plankTexture.wrapS = plankTexture.wrapT = THREE.RepeatWrapping;
+    plankTexture.repeat.y = 9 / (4 * 1.15);
+    plankTexture.colorSpace = THREE.SRGBColorSpace;
+    plankTexture.anisotropy = 8;
+    const bridgeMat = new THREE.MeshStandardMaterial({
+        map: plankTexture,
+        roughness: 0.86,
+        color: 0xfff1dd,
+      }),
+      railMat = material(0xe0bf80);
+    // One deck follows the same sampled surface as the physical bridge. The road stops at its edges.
+    this.ribbon(ROAD_WIDTH, 0, bridgeMat, 0, BRIDGE_START, BRIDGE_END);
     for (let i = BRIDGE_START * TRACK.length; i < BRIDGE_END * TRACK.length; i += 5) {
       for (const side of [-1, 1]) {
-        const p = TRACK.at(i / TRACK.length, side * (ROAD_WIDTH / 2 + 1));
+        const p = TRACK.at(i / TRACK.length, side * barrierOffsetAt(BRIDGE_START));
         cylinder(this.staticRoot, railMat, p.x, p.y + 0.65, p.z, 0.16, 0.2, 1.5, 8);
       }
     }
     for (const side of [-1, 1])
-      this.ribbon(0.17, side * (ROAD_WIDTH / 2 + 1), railMat, 1.1, BRIDGE_START, BRIDGE_END);
+      this.ribbon(
+        0.17,
+        side * barrierOffsetAt(BRIDGE_START),
+        railMat,
+        1.1,
+        BRIDGE_START,
+        BRIDGE_END,
+      );
     for (const progress of BOOST_PADS) {
       const p = TRACK.at(progress),
         pad = new THREE.Group();
@@ -758,11 +961,11 @@ export class GameWorld {
     // Curved guardrails line the edges, matching the collision boundary.
     for (let i = 0; i < TRACK.length; i += 6) {
       const progress = i / TRACK.length;
-      if (progress > BRIDGE_START && progress < BRIDGE_END) continue;
+      if (progress >= BRIDGE_START && progress <= BRIDGE_END) continue;
       for (const side of [-1, 1]) {
-        const p = TRACK.at(progress, side * (ROAD_WIDTH / 2 + 5));
+        const p = TRACK.at(progress, side * barrierOffsetAt(progress));
         cylinder(this.staticRoot, wood, p.x, p.y + 0.45, p.z, 0.095, 0.13, 0.95, 6);
-        const q = TRACK.at((i + 6) / TRACK.length, side * (ROAD_WIDTH / 2 + 5)),
+        const q = TRACK.at((i + 6) / TRACK.length, side * barrierOffsetAt(progress)),
           beam = box(
             this.staticRoot,
             cream,
@@ -827,6 +1030,10 @@ export class GameWorld {
     }
     this.karts = snapshot.racers.map((r) => {
       const kart = createKart(r.characterId, r.id);
+      kart.rig.ears.forEach((ear) => {
+        ear.userData.restZ = ear.rotation.z;
+        ear.userData.restX = ear.rotation.x;
+      });
       this.scene.add(kart.root);
       return kart;
     });
@@ -855,8 +1062,18 @@ export class GameWorld {
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
   }
-  resetCamera() {
+  resetCamera(clearEffects = true) {
     this.cameraReady = false;
+    if (!clearEffects) return;
+    this.markLife.fill(0);
+    this.markAlphas.fill(0);
+    this.marks.geometry.attributes.alpha.needsUpdate = true;
+    this.particleLife.fill(0);
+    this.trailLast.clear();
+    this.effectRings.forEach((effect) => {
+      effect.life = 0;
+      effect.mesh.visible = false;
+    });
   }
   portraits(): Record<CharacterId, string> {
     const oldSize = this.renderer.getSize(new THREE.Vector2()),
@@ -892,10 +1109,12 @@ export class GameWorld {
     mode: 'race' | 'menu' | 'results' = 'race',
   ) {
     this.ensureRoster(snapshot);
+    const dt = snapshot.phase === 'paused' ? 0 : Math.min(0.05, time - this.lastTime || 0.016);
+    this.lastTime = time;
+    this.visualTime += dt;
+    time = this.visualTime;
     this.updateAssistedFeatures(snapshot, time, mode === 'race');
     if (this.startArch) this.startArch.visible = mode !== 'menu';
-    const dt = Math.min(0.05, time - this.lastTime || 0.016);
-    this.lastTime = time;
     this.sea.uniforms.time.value = time;
     for (let i = 0; i < this.karts.length; i++) {
       const kart = this.karts[i],
@@ -903,66 +1122,140 @@ export class GameWorld {
       const x = r.previousX + (r.x - r.previousX) * alpha,
         z = r.previousZ + (r.z - r.previousZ) * alpha,
         yaw = r.previousYaw + angleDelta(r.yaw, r.previousYaw) * alpha;
-      const actionProgress = r.actionTime > 0 ? 1 - r.actionTime / r.actionDuration : 0;
-      const jump =
-        r.actionKind === 'jump' || r.actionKind === 'spin'
-          ? Math.sin(actionProgress * Math.PI) * 2.6
-          : 0;
-      kart.root.position.set(
-        x,
-        TRACK.height(x, z) +
-          jump +
-          Math.sin(time * 22 + i) * Math.min(0.018, Math.abs(r.speed) * 0.0007),
-        z,
-      );
-      kart.root.rotation.y =
-        yaw +
-        (r.actionKind === 'spin'
-          ? actionProgress * Math.PI * 2
-          : r.actionKind === 'drift'
-            ? Math.sin(actionProgress * Math.PI) * 0.45
-            : 0);
-      const moving = Math.min(1, Math.abs(r.speed) / 20),
-        hitReaction = Math.min(1, r.stun / 0.3);
-      kart.root.rotation.x =
-        r.actionKind === 'jump'
-          ? -Math.sin(actionProgress * Math.PI * 2) * 0.13
-          : r.boost > 0
-            ? -0.018 * moving
-            : 0;
-      kart.root.rotation.z =
-        -r.steer * moving * 0.035 + Math.sin(time * 24 + i) * hitReaction * 0.025;
-      kart.shadow.position.y = 0.018 - jump;
-      (kart.shadow.material as THREE.MeshBasicMaterial).opacity = 0.19 * (1 - jump * 0.17);
-      kart.driver.rotation.z = -r.steer * Math.min(0.1, Math.abs(r.speed) * 0.004);
-      kart.driver.rotation.x = Math.sin(time * 5 + i) * 0.015;
-      kart.head.rotation.y = r.steer * 0.13;
-      kart.head.rotation.z = Math.sin(time * 2.7 + i) * 0.035;
-      if (mode === 'results') {
-        kart.driver.position.y = 0.89 + Math.sin(time * 5 + i) * 0.06;
-        kart.head.rotation.z = Math.sin(time * 5 + i) * 0.12;
+      const height = r.previousHeightOffset + (r.heightOffset - r.previousHeightOffset) * alpha,
+        ground = TRACK.height(x, z),
+        grounded = height < 0.08,
+        moving = Math.min(1, Math.abs(r.speed) / 28),
+        slip = Math.atan2(r.lateralSpeed, Math.max(7, Math.abs(r.speed))),
+        settle = 1 - Math.exp(-dt * 16),
+        rig = kart.rig,
+        landing = clamp(r.landingTime / 0.35, 0, 1),
+        impact = clamp(r.impactTime / 0.28, 0, 1) * r.impactStrength,
+        load = clamp(r.acceleration / 18, -1, 1),
+        terrainPitch = -Math.atan2(
+          TRACK.height(x + Math.sin(yaw), z + Math.cos(yaw)) -
+            TRACK.height(x - Math.sin(yaw), z - Math.cos(yaw)),
+          2,
+        ),
+        terrainRoll = Math.atan2(
+          TRACK.height(x + Math.cos(yaw), z - Math.sin(yaw)) -
+            TRACK.height(x - Math.cos(yaw), z + Math.sin(yaw)),
+          2,
+        );
+      kart.root.position.set(x, ground + height, z);
+      kart.root.rotation.set(0, yaw, 0);
+      const bump =
+          grounded && r.surface === 'wood'
+            ? Math.sin((r.completedDistance / 1.15) * Math.PI * 2) * moving * 0.012
+            : 0,
+        pitch =
+          terrainPitch - load * 0.055 - (grounded ? 0 : clamp(r.verticalSpeed * 0.012, -0.1, 0.1)),
+        roll =
+          terrainRoll + r.steer * moving * 0.045 + clamp(r.lateralSpeed * 0.009, -0.075, 0.075);
+      rig.body.position.y +=
+        (-landing * 0.13 + bump - impact * 0.035 - rig.body.position.y) * settle;
+      rig.body.rotation.x += (pitch - rig.body.rotation.x) * settle;
+      rig.body.rotation.z += (roll - rig.body.rotation.z) * settle;
+      rig.body.rotation.y += (clamp(slip * 0.26, -0.12, 0.12) - rig.body.rotation.y) * settle;
+      rig.wheelMounts.forEach((mount) => {
+        const wx = x + Math.cos(yaw) * mount.position.x + Math.sin(yaw) * mount.position.z,
+          wz = z - Math.sin(yaw) * mount.position.x + Math.cos(yaw) * mount.position.z;
+        mount.position.y = 0.525 + (grounded ? TRACK.height(wx, wz) - ground : -0.065);
+      });
+      kart.shadow.position.y = 0.018 - height;
+      kart.shadow.scale.set(1.5 * (1 + height * 0.11), 2.05 * (1 + height * 0.11), 1);
+      (kart.shadow.material as THREE.MeshBasicMaterial).opacity = 0.19 / (1 + height * 0.65);
+      kart.driver.position.y = 0.89;
+      kart.driver.rotation.z +=
+        (-r.steer * moving * 0.065 - slip * 0.07 - kart.driver.rotation.z) * settle;
+      kart.driver.rotation.x += (load * 0.025 + impact * 0.11 - kart.driver.rotation.x) * settle;
+      rig.torso.rotation.x += (impact * 0.15 + landing * 0.08 - rig.torso.rotation.x) * settle;
+      kart.head.rotation.y += (r.steer * 0.12 + slip * 0.16 - kart.head.rotation.y) * settle;
+      kart.head.rotation.x +=
+        (-rig.body.rotation.x * 0.45 + impact * 0.05 - kart.head.rotation.x) * settle;
+      kart.head.rotation.z += (-rig.body.rotation.z * 0.3 - kart.head.rotation.z) * settle;
+      const blinkPhase = mod(time + i * 0.79, 4.3),
+        blink = Math.max(0, 1 - Math.abs(blinkPhase - 0.12) / 0.075);
+      for (const lid of rig.eyelids) lid.scale.y = 0.001 + Math.max(blink, impact * 0.65) * 0.999;
+      rig.gaze.position.x = clamp(r.steer * 0.008 + r.lateralSpeed * 0.001, -0.01, 0.01);
+      rig.gaze.position.y = grounded ? 0 : 0.008;
+      rig.ears.forEach((ear, earIndex) => {
+        const side = earIndex % 2 === 0 ? -1 : 1;
+        ear.rotation.z +=
+          (ear.userData.restZ + side * moving * 0.025 + slip * 0.1 - ear.rotation.z) *
+          (1 - Math.exp(-dt * 9));
+        ear.rotation.x +=
+          (ear.userData.restX - moving * 0.055 - load * 0.025 - ear.rotation.x) *
+          (1 - Math.exp(-dt * 8));
+      });
+      if (rig.tail) {
+        rig.tail.rotation.y +=
+          (clamp(slip * 0.8 - r.steer * moving * 0.12, -0.34, 0.34) - rig.tail.rotation.y) *
+          (1 - Math.exp(-dt * 6));
+        rig.tail.rotation.x +=
+          (-moving * 0.045 + landing * 0.11 - rig.tail.rotation.x) * (1 - Math.exp(-dt * 8));
       }
-      for (const wheel of kart.wheels) wheel.rotation.x += r.speed * dt * 2.1;
+      if (mode === 'results') kart.head.rotation.z = Math.sin(time * 2 + i) * 0.055;
+      for (const wheel of kart.wheels)
+        if (snapshot.phase === 'racing') wheel.rotation.x += (r.speed * dt) / 0.525;
       for (const wheel of kart.front) wheel.rotation.y = r.steer * 0.36;
       kart.steering.rotation.z = -r.steer * 0.5;
+      rig.poseHands();
       kart.shield.visible = r.shield > 0;
-      kart.shield.rotation.y = time * 0.5;
+      kart.shield.rotation.y = time * 0.35;
       for (const flame of kart.flames) {
         flame.visible = r.boost > 0;
-        flame.scale.y = 1 + Math.sin(time * 50) * 0.3;
-        flame.scale.x = 0.85 + Math.sin(time * 40) * 0.15;
+        flame.scale.y = 1 + Math.sin(time * 40) * 0.16;
+        flame.scale.x = 0.9 + Math.sin(time * 31) * 0.1;
       }
-      if (r.drifting && this.quality !== 'low' && snapshot.phase === 'racing')
-        for (const side of [-1, 1])
-          this.emitParticle(
-            x + Math.cos(yaw) * side,
-            z - Math.sin(yaw) * side,
-            TRACK.height(x, z) + 0.16,
-            r.driftCharge >= 1.8 ? 0xffba55 : 0x6ef5ff,
-            yaw,
-          );
-      if (r.offroad && r.speed > 7 && this.quality !== 'low' && snapshot.phase === 'racing')
-        this.emitParticle(x, z, TRACK.height(x, z) + 0.14, 0xe6cc99, yaw);
+      if (snapshot.phase === 'racing' && grounded) {
+        const sliding = Math.abs(r.lateralSpeed) > 1.5 || r.drifting || r.acceleration < -10;
+        const freshTrail = !this.trailLast.has(r.id),
+          previous = this.trailLast.get(r.id) ?? [new THREE.Vector3(), new THREE.Vector3()];
+        if (freshTrail) this.trailLast.set(r.id, previous);
+        for (const [wheelIndex, side] of [-1, 1].entries()) {
+          const wx = x + Math.cos(yaw) * side * 0.94 - Math.sin(yaw) * 0.98,
+            wz = z - Math.sin(yaw) * side * 0.94 - Math.cos(yaw) * 0.98,
+            wy = TRACK.height(wx, wz) + 0.04,
+            last = previous[wheelIndex],
+            distance = freshTrail ? 0 : Math.hypot(wx - last.x, wz - last.z);
+          if (sliding && distance > 0.45 && distance < 3)
+            this.emitMark(
+              last,
+              wx,
+              wy,
+              wz,
+              r.surface === 'sand' ? 0x8c6743 : r.surface === 'wet' ? 0x416c70 : 0x4d5148,
+              0.11 + Math.min(0.04, Math.abs(r.lateralSpeed) * 0.004),
+            );
+          if (freshTrail || !sliding || distance > 0.45) last.set(wx, wy, wz);
+          if (
+            this.quality !== 'low' &&
+            (r.surface === 'sand' || sliding || r.surface === 'wet') &&
+            Math.abs(r.speed) > 5
+          ) {
+            const color =
+              r.surface === 'sand'
+                ? 0xd7b377
+                : r.surface === 'wet'
+                  ? 0xb8eeeb
+                  : r.driftCharge >= 1.8
+                    ? 0xffb65b
+                    : 0xd7e4df;
+            this.emitParticle(
+              wx,
+              wz,
+              wy + 0.06,
+              color,
+              yaw,
+              r.surface === 'sand' ? 1.5 : 0.65,
+              r.surface === 'wet' ? 0.24 : 0.45,
+              0.7,
+              3,
+            );
+          }
+        }
+      } else this.trailLast.delete(r.id);
     }
     while (this.boxes.length < snapshot.boxes.length) {
       const mesh = new THREE.Mesh(this.itemGeometry, this.itemMaterial);
@@ -985,51 +1278,55 @@ export class GameWorld {
       activeProjectiles.add(projectile.id);
       let group = this.projectileMeshes.get(projectile.id);
       if (!group) {
-        group = new THREE.Group();
-        if (projectile.type === 'water') {
-          ellipsoid(
-            group,
-            new THREE.MeshStandardMaterial({
-              color: 0x67d7ef,
-              emissive: 0x156890,
-              emissiveIntensity: 0.6,
-              transparent: true,
-              opacity: 0.9,
-              roughness: 0.15,
-            }),
-            0,
-            0,
-            0,
-            0.6,
-            0.6,
-            0.6,
-          );
-        } else {
-          const mat = material(0xffd459);
-          for (let i = 0; i < 3; i++) {
-            const peel = ellipsoid(
-              group,
-              mat,
-              Math.sin(i * 2.1) * 0.4,
-              0.15,
-              Math.cos(i * 2.1) * 0.4,
-              0.16,
-              0.15,
-              0.65,
-            );
-            peel.rotation.y = i * 2.1;
-          }
-          ellipsoid(group, mat, 0, 0.45, 0, 0.12, 0.35, 0.12);
-        }
+        group = this.createProjectile(projectile);
         this.projectileMeshes.set(projectile.id, group);
         this.scene.add(group);
       }
+      const airborne = projectile.type === 'water' || projectile.type === 'homing';
       group.position.set(
         projectile.x,
-        TRACK.height(projectile.x, projectile.z) + (projectile.type === 'water' ? 1 : 0.15),
+        TRACK.height(projectile.x, projectile.z) +
+          (projectile.heightOffset ?? (airborne ? 0.75 : 0)) +
+          (airborne ? 0 : 0.025),
         projectile.z,
       );
-      group.rotation.y = time * 4;
+      group.rotation.y = projectile.yaw;
+      if (projectile.type === 'pulse') {
+        const radius = Math.max(0.2, projectile.radius ?? 0.2);
+        group.scale.set(radius, 1, radius);
+      }
+      if (projectile.type === 'oil') {
+        const radius = projectile.radius ?? 3.2;
+        group.scale.set(radius, 1, radius);
+      }
+      if (projectile.type === 'homing') {
+        const shell = group.children[0];
+        shell.rotation.z = time * 5;
+        if (snapshot.phase === 'racing' && this.quality !== 'low')
+          this.emitParticle(
+            projectile.x - Math.sin(projectile.yaw) * 0.7,
+            projectile.z - Math.cos(projectile.yaw) * 0.7,
+            group.position.y,
+            0xffb9d1,
+            projectile.yaw,
+            0.3,
+            0.5,
+            0.2,
+            0.3,
+          );
+      }
+      if (projectile.type === 'water' && snapshot.phase === 'racing' && this.quality !== 'low')
+        this.emitParticle(
+          projectile.x,
+          projectile.z,
+          group.position.y,
+          0x7ddfff,
+          projectile.yaw,
+          0.2,
+          0.23,
+          0.1,
+          0.4,
+        );
     }
     for (const [id, group] of this.projectileMeshes)
       if (!activeProjectiles.has(id)) {
@@ -1040,10 +1337,18 @@ export class GameWorld {
     for (let i = 0; i < this.flagMeshes.length; i++)
       this.flagMeshes[i].rotation.x = Math.sin(time * 2 + i * 0.7) * 0.12;
     this.updateParticles(dt);
+    this.updateMarksAndRings(dt);
+    this.updateWind(snapshot, time, dt);
     const player = snapshot.racers[0],
       playerX = player.previousX + (player.x - player.previousX) * alpha,
       playerZ = player.previousZ + (player.z - player.previousZ) * alpha,
-      position = new THREE.Vector3(playerX, TRACK.height(playerX, playerZ), playerZ),
+      playerHeight =
+        player.previousHeightOffset + (player.heightOffset - player.previousHeightOffset) * alpha,
+      position = new THREE.Vector3(
+        playerX,
+        TRACK.height(playerX, playerZ) + playerHeight * 0.35,
+        playerZ,
+      ),
       viewYaw =
         mode === 'race' && snapshot.config.driving !== 'manual'
           ? TRACK.at(player.progress).yaw
@@ -1082,16 +1387,16 @@ export class GameWorld {
     } else {
       desired = position
         .clone()
-        .addScaledVector(forward, -8.1 - (player.boost > 0 ? 0.6 : 0))
+        .addScaledVector(
+          forward,
+          -8.1 - Math.min(0.7, Math.abs(player.speed) * 0.018) - (player.boost > 0 ? 0.35 : 0),
+        )
+        .addScaledVector(left, clamp(-player.lateralSpeed * 0.07, -0.5, 0.5))
         .add(new THREE.Vector3(0, 4.35, 0));
-      const jump =
-        (player.actionKind === 'jump' || player.actionKind === 'spin') && player.actionTime > 0
-          ? Math.sin((1 - player.actionTime / player.actionDuration) * Math.PI) * 0.8
-          : 0;
       target = position
         .clone()
-        .addScaledVector(forward, 7)
-        .add(new THREE.Vector3(0, 1.35 + jump, 0));
+        .addScaledVector(forward, 7 + Math.min(1.5, Math.abs(player.speed) * 0.035))
+        .add(new THREE.Vector3(0, 1.35 + playerHeight * 0.3, 0));
     }
     if (!this.cameraReady) {
       this.camera.position.copy(desired);
@@ -1110,28 +1415,339 @@ export class GameWorld {
     this.sun.target.position.copy(position);
     this.renderer.render(this.scene, this.camera);
   }
-  private emitParticle(x: number, z: number, y: number, color: number, yaw: number) {
-    const i = this.nextParticle++ % 180,
+  private createProjectile(projectile: Projectile) {
+    const group = new THREE.Group();
+    if (projectile.type === 'water') {
+      const water = new THREE.MeshStandardMaterial({
+        color: 0x67d7ef,
+        emissive: 0x156890,
+        emissiveIntensity: 0.6,
+        transparent: true,
+        opacity: 0.88,
+        roughness: 0.12,
+      });
+      ellipsoid(group, water, 0, 0, 0, 0.52, 0.52, 0.7);
+      ellipsoid(
+        group,
+        new THREE.MeshBasicMaterial({ color: 0xd3fbff }),
+        -0.15,
+        0.2,
+        0.32,
+        0.1,
+        0.17,
+        0.04,
+      );
+    } else if (projectile.type === 'banana') {
+      const yellow = material(0xffd459),
+        tip = material(0x775136);
+      for (let i = 0; i < 3; i++) {
+        const peel = ellipsoid(
+          group,
+          yellow,
+          Math.sin(i * 2.1) * 0.4,
+          0.12,
+          Math.cos(i * 2.1) * 0.4,
+          0.18,
+          0.12,
+          0.67,
+        );
+        peel.rotation.y = i * 2.1;
+      }
+      ellipsoid(group, yellow, 0, 0.4, 0, 0.13, 0.32, 0.13);
+      ellipsoid(group, tip, 0, 0.7, 0, 0.1, 0.07, 0.1);
+    } else if (projectile.type === 'homing') {
+      const shell = new THREE.Group();
+      group.add(shell);
+      const pink = material(0xef92a9, 0.33),
+        cream = material(0xffecc9, 0.3);
+      ellipsoid(shell, pink, 0, 0, 0, 0.62, 0.56, 0.55);
+      for (let i = 0; i < 4; i++) {
+        const ring = new THREE.Mesh(new THREE.TorusGeometry(0.47 - i * 0.09, 0.065, 5, 22), cream);
+        ring.position.z = 0.23 + i * 0.115;
+        shell.add(ring);
+      }
+      const point = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.42, 8), cream);
+      point.rotation.x = Math.PI / 2;
+      point.position.z = 0.7;
+      shell.add(point);
+      const halo = new THREE.Mesh(
+        new THREE.TorusGeometry(0.75, 0.025, 4, 24),
+        new THREE.MeshBasicMaterial({
+          color: projectile.targetId === 0 ? 0xff795c : 0xffd1db,
+          transparent: true,
+          opacity: 0.8,
+        }),
+      );
+      halo.rotation.x = Math.PI / 2;
+      group.add(halo);
+    } else if (projectile.type === 'pulse') {
+      for (const radius of [1, 0.74]) {
+        const ring = new THREE.Mesh(
+          new THREE.RingGeometry(radius - 0.075, radius, 56),
+          new THREE.MeshBasicMaterial({
+            color: 0x7be8df,
+            transparent: true,
+            opacity: radius === 1 ? 0.75 : 0.32,
+            depthWrite: false,
+            side: THREE.DoubleSide,
+          }),
+        );
+        ring.rotation.x = -Math.PI / 2;
+        ring.position.y = 0.025;
+        group.add(ring);
+      }
+    } else {
+      const puddle = new THREE.Mesh(
+        new THREE.CircleGeometry(1, 48),
+        new THREE.MeshStandardMaterial({
+          color: 0x30283f,
+          roughness: 0.07,
+          metalness: 0.38,
+          transparent: true,
+          opacity: 0.88,
+          depthWrite: false,
+          side: THREE.DoubleSide,
+        }),
+      );
+      puddle.rotation.x = -Math.PI / 2;
+      group.add(puddle);
+      const edge = new THREE.Mesh(
+        new THREE.RingGeometry(0.94, 1, 48),
+        new THREE.MeshBasicMaterial({
+          color: 0xbc8ecb,
+          transparent: true,
+          opacity: 0.72,
+          depthWrite: false,
+          side: THREE.DoubleSide,
+        }),
+      );
+      edge.rotation.x = -Math.PI / 2;
+      edge.position.y = 0.012;
+      group.add(edge);
+      for (let i = 0; i < 3; i++) {
+        const sheen = new THREE.Mesh(
+          new THREE.RingGeometry(0.13 + i * 0.12, 0.145 + i * 0.12, 32, 1, i, 2.7),
+          new THREE.MeshBasicMaterial({
+            color: [0x7d9fd3, 0xceb2d9, 0x7cc9bf][i],
+            transparent: true,
+            opacity: 0.45,
+            depthWrite: false,
+            side: THREE.DoubleSide,
+          }),
+        );
+        sheen.rotation.x = -Math.PI / 2;
+        sheen.position.set(-0.15, 0.015, 0.08);
+        group.add(sheen);
+      }
+    }
+    return group;
+  }
+  events(events: RaceEvent[]) {
+    for (const event of events) {
+      if (!['collision', 'hit', 'land', 'launch', 'shield-block'].includes(event.type)) continue;
+      const kart = this.karts[event.racerId],
+        x = event.x ?? kart?.root.position.x ?? 0,
+        z = event.z ?? kart?.root.position.z ?? 0,
+        shield = event.type === 'shield-block',
+        landing = event.type === 'land',
+        strength = event.strength ?? 0.5,
+        color = shield
+          ? 0x9bffff
+          : landing
+            ? 0xe8c996
+            : event.type === 'hit'
+              ? 0x8be5ff
+              : event.type === 'launch'
+                ? 0xc1f5e1
+                : 0xffc170,
+        y = TRACK.height(x, z) + (shield ? 1.2 : 0.15);
+      const count = this.quality === 'low' ? 5 : Math.round(9 + strength * 12);
+      for (let i = 0; i < count; i++)
+        this.emitParticle(
+          x,
+          z,
+          y,
+          color,
+          (i / count) * Math.PI * 2,
+          1.8 + strength,
+          shield ? 0.35 : 0.45,
+          landing ? 0.6 : 1.2,
+          shield ? 0.5 : 5,
+        );
+      const ring = this.effectRings[this.nextRing++ % this.effectRings.length];
+      ring.life = ring.duration = shield ? 0.32 : 0.45;
+      ring.endScale = shield ? 2.2 : landing ? 2.8 : 1.8;
+      ring.ground = !shield;
+      ring.mesh.position.set(x, y, z);
+      ring.mesh.material.color.setHex(color);
+      ring.mesh.visible = true;
+    }
+  }
+  private emitMark(
+    from: THREE.Vector3,
+    x: number,
+    y: number,
+    z: number,
+    color: number,
+    width: number,
+  ) {
+    const index = this.nextMark++ % MARK_COUNT,
+      dx = x - from.x,
+      dz = z - from.z,
+      length = Math.hypot(dx, dz),
+      nx = (-dz / length) * width,
+      nz = (dx / length) * width,
+      tx = (dx / length) * 0.025,
+      tz = (dz / length) * 0.025,
+      ax = from.x - tx,
+      az = from.z - tz,
+      bx = x + tx,
+      bz = z + tz;
+    this.markPositions.set(
+      [
+        ax + nx,
+        from.y,
+        az + nz,
+        ax - nx,
+        from.y,
+        az - nz,
+        bx + nx,
+        y,
+        bz + nz,
+        bx + nx,
+        y,
+        bz + nz,
+        ax - nx,
+        from.y,
+        az - nz,
+        bx - nx,
+        y,
+        bz - nz,
+      ],
+      index * 18,
+    );
+    const tint = new THREE.Color(color);
+    for (let i = 0; i < 6; i++) this.markColors.set([tint.r, tint.g, tint.b], index * 18 + i * 3);
+    this.markLife[index] = 1;
+    this.marks.geometry.attributes.position.needsUpdate = true;
+    this.marks.geometry.attributes.color.needsUpdate = true;
+  }
+  private updateMarksAndRings(dt: number) {
+    for (let i = 0; i < MARK_COUNT; i++) {
+      this.markLife[i] = Math.max(0, this.markLife[i] - dt / 7);
+      this.markAlphas.fill(this.markLife[i], i * 6, i * 6 + 6);
+    }
+    this.marks.geometry.attributes.alpha.needsUpdate = true;
+    for (const effect of this.effectRings) {
+      effect.life = Math.max(0, effect.life - dt);
+      effect.mesh.visible = effect.life > 0;
+      if (!effect.mesh.visible) continue;
+      const progress = 1 - effect.life / effect.duration;
+      effect.mesh.scale.setScalar(0.65 + progress * effect.endScale);
+      effect.mesh.material.opacity = (1 - progress) * 0.72;
+      if (effect.ground) effect.mesh.rotation.set(-Math.PI / 2, 0, 0);
+      else effect.mesh.quaternion.copy(this.camera.quaternion);
+    }
+  }
+  private updateWind(snapshot: RaceSnapshot, time: number, dt: number) {
+    for (let i = 0; i < this.windRibbons.length; i++) {
+      const ribbon = this.windRibbons[i],
+        positions = ribbon.geometry.attributes.position;
+      for (let j = 0; j < positions.count; j++) {
+        const x = positions.getX(j);
+        positions.setZ(j, Math.sin(time * 5 + x * 3 + i) * 0.12 * (x / 2.8));
+      }
+      positions.needsUpdate = true;
+    }
+    const player = snapshot.racers[0];
+    if (
+      snapshot.phase !== 'racing' ||
+      this.quality === 'low' ||
+      player.progress < WIND_ZONE.start - 0.01 ||
+      player.progress > WIND_ZONE.end + 0.01
+    )
+      return;
+    this.windEmission += dt;
+    if (this.windEmission < 0.06) return;
+    this.windEmission = 0;
+    const p = TRACK.at(
+      player.progress + (10 + Math.random() * 22) / TRACK.length,
+      (Math.random() - 0.5) * 22,
+    );
+    this.emitParticle(
+      p.x,
+      p.z,
+      p.y + 1 + Math.random() * 3,
+      0xd6fff1,
+      p.yaw - Math.PI / 2,
+      0.2,
+      0.9,
+      0.05,
+      0,
+    );
+  }
+  getVisualState() {
+    const kart = this.karts[0];
+    if (!kart) return null;
+    kart.root.updateMatrixWorld(true);
+    const body = kart.rig.body.getWorldPosition(new THREE.Vector3());
+    return {
+      root: kart.root.position.toArray(),
+      body: body.toArray(),
+      suspension: {
+        y: kart.rig.body.position.y,
+        pitch: kart.rig.body.rotation.x,
+        roll: kart.rig.body.rotation.z,
+      },
+      wheels: kart.rig.wheelMounts.map((mount) => {
+        const position = mount.getWorldPosition(new THREE.Vector3());
+        return {
+          x: position.x,
+          y: position.y,
+          z: position.z,
+          contact: TRACK.height(position.x, position.z),
+          clearance: position.y - 0.525 - TRACK.height(position.x, position.z),
+        };
+      }),
+      particles: this.particleLife.reduce((count, life) => count + Number(life > 0), 0),
+      marks: this.markLife.reduce((count, life) => count + Number(life > 0), 0),
+      projectiles: this.projectileMeshes.size,
+      rings: this.effectRings.filter((effect) => effect.life > 0).length,
+    };
+  }
+  private emitParticle(
+    x: number,
+    z: number,
+    y: number,
+    color: number,
+    yaw: number,
+    spread = 1,
+    lifetime = 0.5,
+    lift = 1,
+    gravity = 3,
+  ) {
+    const i = this.nextParticle++ % PARTICLE_COUNT,
       c = new THREE.Color(color);
     this.particlePositions.set([x, y, z], i * 3);
     this.particleColors.set([c.r, c.g, c.b], i * 3);
     this.particleVelocity.set(
       [
-        -Math.sin(yaw) * 2 + (Math.random() - 0.5) * 2,
-        1 + Math.random(),
-        -Math.cos(yaw) * 2 + (Math.random() - 0.5) * 2,
+        -Math.sin(yaw) * 2 + (Math.random() - 0.5) * 2 * spread,
+        lift + Math.random() * spread,
+        -Math.cos(yaw) * 2 + (Math.random() - 0.5) * 2 * spread,
       ],
       i * 3,
     );
-    this.particleLife[i] = 0.35 + Math.random() * 0.25;
+    this.particleLife[i] = lifetime * (0.75 + Math.random() * 0.5);
+    this.particleGravity[i] = gravity;
   }
   private updateParticles(dt: number) {
-    for (let i = 0; i < 180; i++) {
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
       if (this.particleLife[i] > 0) {
         this.particleLife[i] -= dt;
         for (let j = 0; j < 3; j++)
           this.particlePositions[i * 3 + j] += this.particleVelocity[i * 3 + j] * dt;
-        this.particleVelocity[i * 3 + 1] -= 3 * dt;
+        this.particleVelocity[i * 3 + 1] -= this.particleGravity[i] * dt;
       } else this.particlePositions[i * 3 + 1] = -999;
     }
     this.particles.geometry.attributes.position.needsUpdate = true;
