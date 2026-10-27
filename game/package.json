@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
-    "build": "tsc --noEmit && vite build",
+    "build": "npm run typecheck && vite build --base=./",
     "test": "vitest run",
     "preview": "vite preview --host 0.0.0.0 --port 4173 --strictPort",
     "qa": "node scripts/browser-qa.mjs",
@@ -15,7 +15,8 @@
     "qa:production": "node scripts/production-qa.mjs",
     "qa:repair": "node scripts/repair-qa.mjs",
     "qa:controls": "node scripts/controls-qa.mjs",
-    "qa:overhaul": "node scripts/overhaul-qa.mjs"
+    "qa:overhaul": "node scripts/overhaul-qa.mjs",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "three": "0.186.0"
@@ -27,5 +28,8 @@
     "typescript": "7.0.2",
     "vite": "8.3.0",
     "vitest": "5.0.1"
+  },
+  "engines": {
+    "node": "24.x"
   }
 }

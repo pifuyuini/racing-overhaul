@@ -7,7 +7,7 @@ if (!dir || path.resolve(process.env.TMPDIR ?? '') !== path.resolve(dir)) {
   throw new Error('Set QA_ARTIFACT_DIR and TMPDIR to the same marked task directory.');
 }
 await access(path.join(dir, '.codex-tmp'));
-const base = process.env.QA_BASE_URL ?? 'http://10.10.10.1:5173/';
+const base = process.env.QA_BASE_URL ?? 'http://localhost:5173/';
 const arrows =
   /[\u2190-\u21ff\u2794\u2798-\u27af\u27f0-\u27ff\u2900-\u297f\u2b00-\u2b0d\u2b45-\u2b4c\u2b60-\u2b73\u276e-\u2771\u2039\u203a\u00ab\u00bb]/u;
 const report = {
@@ -43,7 +43,8 @@ await scanDirectory('src');
 await scan('index.html');
 check('source and CSS contain no text arrow glyphs', report.sourceArrows.length === 0);
 const browser = await chromium.launch({
-  executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+  executablePath:
+    process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
   headless: true,
 });
 const page = await browser.newPage({

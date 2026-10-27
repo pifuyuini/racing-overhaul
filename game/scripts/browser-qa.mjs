@@ -6,9 +6,10 @@ const root = process.cwd();
 const artifactDir = process.env.QA_ARTIFACT_DIR;
 if (!artifactDir) throw new Error('Set QA_ARTIFACT_DIR to the marked task temporary directory.');
 await mkdir(artifactDir, { recursive: true });
-const base = process.env.QA_BASE_URL ?? 'http://10.10.10.1:5173';
+const base = process.env.QA_BASE_URL ?? 'http://localhost:5173';
 const browser = await chromium.launch({
-  executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+  executablePath:
+    process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
   headless: true,
   downloadsPath: path.join(artifactDir, 'downloads'),
   tracesDir: path.join(artifactDir, 'traces'),

@@ -1,0 +1,15 @@
+{
+  "kind": "extracted-historical-test-summary",
+  "source": "tmp/20261027-racing-overhaul/short-core.log",
+  "command": "npm test",
+  "testFiles": {
+    "passed": 4,
+    "total": 4
+  },
+  "tests": {
+    "passed": 188,
+    "total": 188
+  },
+  "duration": "8.07s (tests 95%, transform 3%, import 1%)",
+  "note": "从原始历史日志提取的摘要；未在本次文档整理中重新运行测试。原始日志位于 Release 证据压缩包内。"
+}

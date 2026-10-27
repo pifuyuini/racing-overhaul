@@ -1,0 +1,439 @@
+{
+  "recordedAt": "2026-10-26T20:37:35.362Z",
+  "passed": true,
+  "checks": [
+    "source and CSS contain no text arrow glyphs",
+    "home visible DOM contains no text arrows",
+    "setup visible DOM contains no text arrows",
+    "KeyA reaches the correct actual screen side",
+    "KeyD reaches the correct actual screen side",
+    "ArrowLeft reaches the correct actual screen side",
+    "ArrowRight reaches the correct actual screen side",
+    "click-left reaches the correct actual screen side",
+    "click-right reaches the correct actual screen side",
+    "KeyA steering moves on the correct side of the initial forward line",
+    "KeyD steering moves on the correct side of the initial forward line",
+    "KeyA drift moves on the correct side of the initial forward line",
+    "KeyA drift has real charge",
+    "KeyD drift moves on the correct side of the initial forward line",
+    "KeyD drift has real charge",
+    "left route label advertises nitro",
+    "right route label advertises item",
+    "left reward route is on its actual screen side",
+    "left advertised reward matches the actual crossing",
+    "left route label advertises nitro",
+    "right route label advertises item",
+    "right reward route is on its actual screen side",
+    "right advertised reward matches the actual crossing",
+    "Space uses nitro without activating the focused lane button",
+    "upcoming interaction is disabled",
+    "upcoming prompt state is explicit",
+    "early F does not claim an interaction",
+    "available prompt is enabled",
+    "perfect prompt is explicit",
+    "interaction HUD leaves the forward road corridor clear",
+    "race visible DOM contains no text arrows",
+    "recovering prompt and nitro are disabled",
+    "missed prompt remains explicit",
+    "pause visible DOM contains no text arrows",
+    "restart clears missed prompt",
+    "results visible DOM contains no text arrows",
+    "panda has a rendered model portrait",
+    "capybara has a rendered model portrait",
+    "fox has a rendered model portrait",
+    "penguin has a rendered model portrait",
+    "model swaps release GPU geometry",
+    "model swaps release textures",
+    "no browser runtime or rendering errors"
+  ],
+  "movements": [
+    {
+      "driving": "assisted",
+      "key": "KeyA",
+      "sign": -1,
+      "after": {
+        "phase": "racing",
+        "x": 1.7540154956529714,
+        "z": 100.85167293834361,
+        "yaw": 1.6302462598547842,
+        "progress": 0.0018164248333918387,
+        "delta": -0.4351047236777323,
+        "fromForward": null,
+        "drifting": false,
+        "charge": 0,
+        "lane": 4.015614084264046
+      }
+    },
+    {
+      "driving": "assisted",
+      "key": "KeyD",
+      "sign": 1,
+      "after": {
+        "phase": "racing",
+        "x": 11.819498168179564,
+        "z": 109.27926097492875,
+        "yaw": 1.4659292158057358,
+        "progress": 0.011393991723153363,
+        "delta": 0.3691806703033868,
+        "fromForward": null,
+        "drifting": false,
+        "charge": 0,
+        "lane": -4.006982589719654
+      }
+    },
+    {
+      "driving": "assisted",
+      "key": "ArrowLeft",
+      "sign": -1,
+      "after": {
+        "phase": "racing",
+        "x": 30.116944300133454,
+        "z": 104.31014308191706,
+        "yaw": 1.3835940352255685,
+        "progress": 0.02744457212844309,
+        "delta": -0.3326917308795012,
+        "fromForward": null,
+        "drifting": false,
+        "charge": 0,
+        "lane": 4.010446035831266
+      }
+    },
+    {
+      "driving": "assisted",
+      "key": "ArrowRight",
+      "sign": 1,
+      "after": {
+        "phase": "racing",
+        "x": 50.42620913437773,
+        "z": 114.40025615551448,
+        "yaw": 1.5796974658480891,
+        "progress": 0.04692151236437736,
+        "delta": 0.32555213431776037,
+        "fromForward": null,
+        "drifting": false,
+        "charge": 0,
+        "lane": -4.009044419083443
+      }
+    },
+    {
+      "driving": "assisted",
+      "key": "click-left",
+      "sign": -1,
+      "after": {
+        "phase": "racing",
+        "x": 72.35115103400717,
+        "z": 102.53970244263823,
+        "yaw": 1.8083626307443206,
+        "progress": 0.06860732853058527,
+        "delta": -0.27746923041447197,
+        "fromForward": null,
+        "drifting": false,
+        "charge": 0,
+        "lane": 4.009005334565209
+      }
+    },
+    {
+      "driving": "assisted",
+      "key": "click-right",
+      "sign": 1,
+      "after": {
+        "phase": "racing",
+        "x": 106.3064364722977,
+        "z": 98.14797417527149,
+        "yaw": 2.0462231184259236,
+        "progress": 0.09941584854637187,
+        "delta": 0.2613207549848784,
+        "fromForward": null,
+        "drifting": false,
+        "charge": 0,
+        "lane": -4.006310823473465
+      }
+    },
+    {
+      "driving": "manual",
+      "key": "KeyA",
+      "drift": false,
+      "before": {
+        "phase": "racing",
+        "x": 9.256097777431142,
+        "z": 104.10162598920526,
+        "yaw": 1.6665989449004681,
+        "progress": 0.008511907921936235,
+        "delta": -0.08534961728517707,
+        "fromForward": null,
+        "drifting": false,
+        "charge": 0,
+        "lane": -2.4
+      },
+      "after": {
+        "phase": "racing",
+        "x": 19.41355825013899,
+        "z": 100.00141601472754,
+        "yaw": 2.4130086024943287,
+        "progress": 0.017065435060348966,
+        "delta": -0.6562562032242727,
+        "fromForward": -0.27939554497694197,
+        "drifting": false,
+        "charge": 0,
+        "lane": -2.4
+      }
+    },
+    {
+      "driving": "manual",
+      "key": "KeyD",
+      "drift": false,
+      "before": {
+        "phase": "racing",
+        "x": 9.255853301872252,
+        "z": 104.09968170602673,
+        "yaw": 1.6665989449004681,
+        "progress": 0.008511546309533324,
+        "delta": -0.08554252867539487,
+        "fromForward": null,
+        "drifting": false,
+        "charge": 0,
+        "lane": -2.4
+      },
+      "after": {
+        "phase": "racing",
+        "x": 20.29255270428196,
+        "z": 106.37374249387763,
+        "yaw": 0.8975444719027411,
+        "progress": 0.018862415106963848,
+        "delta": -0.013251631927249981,
+        "fromForward": 0.29909986269937205,
+        "drifting": false,
+        "charge": 0,
+        "lane": -2.4
+      }
+    },
+    {
+      "driving": "manual",
+      "key": "KeyA",
+      "drift": true,
+      "before": {
+        "phase": "racing",
+        "x": 9.256289506858915,
+        "z": 104.10321904551178,
+        "yaw": 1.6665989449004681,
+        "progress": 0.008512196292626006,
+        "delta": -0.08520953490322165,
+        "fromForward": null,
+        "drifting": false,
+        "charge": 0,
+        "lane": -2.4
+      },
+      "after": {
+        "phase": "racing",
+        "x": 19.83714897036591,
+        "z": 100.92508628224387,
+        "yaw": 2.554826437437161,
+        "progress": 0.017596115678728763,
+        "delta": -0.5352816212101985,
+        "fromForward": -0.18559100071577156,
+        "drifting": true,
+        "charge": 0.6500000000000004,
+        "lane": -2.4
+      }
+    },
+    {
+      "driving": "manual",
+      "key": "KeyD",
+      "drift": true,
+      "before": {
+        "phase": "racing",
+        "x": 9.255853301872252,
+        "z": 104.09968170602673,
+        "yaw": 1.6665989449004681,
+        "progress": 0.008511546309533324,
+        "delta": -0.08553870533439736,
+        "fromForward": null,
+        "drifting": false,
+        "charge": 0,
+        "lane": -2.4
+      },
+      "after": {
+        "phase": "racing",
+        "x": 20.24830870904393,
+        "z": 105.20468783109332,
+        "yaw": 0.7783714523637738,
+        "progress": 0.01863273984722258,
+        "delta": -0.10868520319208753,
+        "fromForward": 0.18554151641907804,
+        "drifting": true,
+        "charge": 0.6500000000000004,
+        "lane": -2.4
+      }
+    }
+  ],
+  "rewards": [
+    {
+      "side": "left",
+      "nitro": 35.3,
+      "item": null,
+      "position": {
+        "phase": "racing",
+        "x": 84.06883786442316,
+        "z": 99.06163397139223,
+        "yaw": 1.8839476584781758,
+        "progress": 0.08021467396569415,
+        "delta": -0.24662880375515478,
+        "fromForward": null,
+        "drifting": false,
+        "charge": 0,
+        "lane": 4.006046306228452
+      }
+    },
+    {
+      "side": "right",
+      "nitro": 0.30000000000000004,
+      "item": "pulse",
+      "position": {
+        "phase": "racing",
+        "x": 48.333233181798086,
+        "z": 114.48685449808389,
+        "yaw": 1.5473488120160677,
+        "progress": 0.04511388763253921,
+        "delta": 0.3177418975120998,
+        "fromForward": null,
+        "drifting": false,
+        "charge": 0,
+        "lane": -4.055656549346466
+      }
+    }
+  ],
+  "resources": [
+    {
+      "cycle": 0,
+      "character": "panda",
+      "calls": 579,
+      "triangles": 1668934,
+      "geometries": 288,
+      "textures": 13,
+      "events": {
+        "countdown": 3
+      },
+      "playerEvents": {
+        "countdown": 3
+      },
+      "items": {},
+      "averageFrameMs": 0
+    },
+    {
+      "cycle": 0,
+      "character": "capybara",
+      "calls": 579,
+      "triangles": 1668934,
+      "geometries": 288,
+      "textures": 13,
+      "events": {
+        "countdown": 3
+      },
+      "playerEvents": {
+        "countdown": 3
+      },
+      "items": {},
+      "averageFrameMs": 0
+    },
+    {
+      "cycle": 0,
+      "character": "fox",
+      "calls": 579,
+      "triangles": 1668934,
+      "geometries": 288,
+      "textures": 13,
+      "events": {
+        "countdown": 3
+      },
+      "playerEvents": {
+        "countdown": 3
+      },
+      "items": {},
+      "averageFrameMs": 0
+    },
+    {
+      "cycle": 0,
+      "character": "penguin",
+      "calls": 579,
+      "triangles": 1668934,
+      "geometries": 288,
+      "textures": 13,
+      "events": {
+        "countdown": 3
+      },
+      "playerEvents": {
+        "countdown": 3
+      },
+      "items": {},
+      "averageFrameMs": 0
+    },
+    {
+      "cycle": 1,
+      "character": "panda",
+      "calls": 578,
+      "triangles": 1668933,
+      "geometries": 288,
+      "textures": 13,
+      "events": {
+        "countdown": 3
+      },
+      "playerEvents": {
+        "countdown": 3
+      },
+      "items": {},
+      "averageFrameMs": 0
+    },
+    {
+      "cycle": 1,
+      "character": "capybara",
+      "calls": 578,
+      "triangles": 1668933,
+      "geometries": 288,
+      "textures": 13,
+      "events": {
+        "countdown": 3
+      },
+      "playerEvents": {
+        "countdown": 3
+      },
+      "items": {},
+      "averageFrameMs": 0
+    },
+    {
+      "cycle": 1,
+      "character": "fox",
+      "calls": 579,
+      "triangles": 1668934,
+      "geometries": 288,
+      "textures": 13,
+      "events": {
+        "countdown": 3
+      },
+      "playerEvents": {
+        "countdown": 3
+      },
+      "items": {},
+      "averageFrameMs": 0
+    },
+    {
+      "cycle": 1,
+      "character": "penguin",
+      "calls": 578,
+      "triangles": 1668933,
+      "geometries": 288,
+      "textures": 13,
+      "events": {
+        "countdown": 3
+      },
+      "playerEvents": {
+        "countdown": 3
+      },
+      "items": {},
+      "averageFrameMs": 0
+    }
+  ],
+  "sourceArrows": [],
+  "domStages": ["home", "setup", "race", "pause", "results"],
+  "errors": [],
+  "warnings": []
+}

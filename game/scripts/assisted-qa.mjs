@@ -4,9 +4,10 @@ import { writeFile } from 'node:fs/promises';
 import path from 'node:path';
 const dir = process.env.QA_ARTIFACT_DIR;
 if (!dir) throw Error('QA_ARTIFACT_DIR must point to the marked task directory.');
-const base = process.env.QA_BASE_URL ?? 'http://10.10.10.1:5173';
+const base = process.env.QA_BASE_URL ?? 'http://localhost:5173';
 const browser = await chromium.launch({
-  executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+  executablePath:
+    process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
   headless: true,
 });
 const page = await browser.newPage({

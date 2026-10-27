@@ -1,0 +1,262 @@
+{
+  "recordedAt": "2026-10-26T20:44:05.413Z",
+  "url": "http://localhost:5173/",
+  "passed": true,
+  "focus": [
+    {
+      "action": "character",
+      "id": "fox",
+      "focusedAction": "character",
+      "focusedId": "fox",
+      "pressed": "true",
+      "via": "keyboard"
+    },
+    {
+      "action": "difficulty",
+      "id": "hard",
+      "focusedAction": "difficulty",
+      "focusedId": "hard",
+      "pressed": "true",
+      "via": "keyboard"
+    },
+    {
+      "action": "driving",
+      "id": "manual",
+      "focusedAction": "driving",
+      "focusedId": "manual",
+      "pressed": "true",
+      "via": "keyboard"
+    },
+    {
+      "action": "mode",
+      "id": "time",
+      "focusedAction": "mode",
+      "focusedId": "time",
+      "pressed": "true",
+      "via": "keyboard"
+    },
+    {
+      "action": "character",
+      "id": "penguin",
+      "focusedAction": "character",
+      "focusedId": "penguin",
+      "pressed": "true",
+      "via": "mouse"
+    },
+    {
+      "action": "mode",
+      "id": "race",
+      "focusedAction": "mode",
+      "focusedId": "race",
+      "pressed": "true",
+      "via": "mouse"
+    },
+    {
+      "action": "difficulty",
+      "id": "easy",
+      "focusedAction": "difficulty",
+      "focusedId": "easy",
+      "pressed": "true",
+      "via": "mouse"
+    },
+    {
+      "action": "driving",
+      "id": "assisted",
+      "focusedAction": "driving",
+      "focusedId": "assisted",
+      "pressed": "true",
+      "via": "mouse"
+    },
+    {
+      "action": "mode",
+      "id": "time",
+      "focusedAction": "mode",
+      "focusedId": "time",
+      "pressed": "true",
+      "via": "mouse"
+    }
+  ],
+  "widths": [
+    {
+      "width": 320,
+      "pageWidth": 320,
+      "panelClientWidth": 288,
+      "panelScrollWidth": 288,
+      "lapCount": 3,
+      "fields": [
+        {
+          "selector": ".result-times",
+          "text": "完赛用时2:25.133最佳单圈0:47.983",
+          "rendered": true,
+          "inViewport": true,
+          "bounds": {
+            "x": 53,
+            "y": 292,
+            "width": 214,
+            "height": 40
+          }
+        },
+        {
+          "selector": ".record-badge",
+          "text": " 新的个人纪录",
+          "rendered": true,
+          "inViewport": true,
+          "bounds": {
+            "x": 53,
+            "y": 349,
+            "width": 214,
+            "height": 17.390625
+          }
+        },
+        {
+          "selector": ".drive-result",
+          "text": "轻松驾驶 · 氮气 0 次 · 完美互动 0 次",
+          "rendered": true,
+          "inViewport": true,
+          "bounds": {
+            "x": 53,
+            "y": 379.390625,
+            "width": 214,
+            "height": 17.59375
+          }
+        }
+      ]
+    },
+    {
+      "width": 575,
+      "pageWidth": 575,
+      "panelClientWidth": 543,
+      "panelScrollWidth": 543,
+      "lapCount": 3,
+      "fields": [
+        {
+          "selector": ".result-times",
+          "text": "完赛用时2:25.133最佳单圈0:47.983",
+          "rendered": true,
+          "inViewport": true,
+          "bounds": {
+            "x": 53,
+            "y": 273.90625,
+            "width": 469,
+            "height": 44
+          }
+        },
+        {
+          "selector": ".record-badge",
+          "text": " 新的个人纪录",
+          "rendered": true,
+          "inViewport": true,
+          "bounds": {
+            "x": 53,
+            "y": 334.90625,
+            "width": 469,
+            "height": 17.390625
+          }
+        },
+        {
+          "selector": ".drive-result",
+          "text": "轻松驾驶 · 氮气 0 次 · 完美互动 0 次",
+          "rendered": true,
+          "inViewport": true,
+          "bounds": {
+            "x": 53,
+            "y": 365.296875,
+            "width": 469,
+            "height": 17.59375
+          }
+        }
+      ]
+    },
+    {
+      "width": 700,
+      "pageWidth": 700,
+      "panelClientWidth": 668,
+      "panelScrollWidth": 668,
+      "lapCount": 3,
+      "fields": [
+        {
+          "selector": ".result-times",
+          "text": "完赛用时2:25.133最佳单圈0:47.983",
+          "rendered": true,
+          "inViewport": true,
+          "bounds": {
+            "x": 53,
+            "y": 273.90625,
+            "width": 594,
+            "height": 44
+          }
+        },
+        {
+          "selector": ".record-badge",
+          "text": " 新的个人纪录",
+          "rendered": true,
+          "inViewport": true,
+          "bounds": {
+            "x": 53,
+            "y": 334.90625,
+            "width": 594,
+            "height": 17.390625
+          }
+        },
+        {
+          "selector": ".drive-result",
+          "text": "轻松驾驶 · 氮气 0 次 · 完美互动 0 次",
+          "rendered": true,
+          "inViewport": true,
+          "bounds": {
+            "x": 53,
+            "y": 365.296875,
+            "width": 594,
+            "height": 17.59375
+          }
+        }
+      ]
+    }
+  ],
+  "storage": [
+    {
+      "name": "records-string",
+      "passed": true,
+      "errors": [],
+      "finishText": "2:23.266",
+      "record": {
+        "lap": 47.35000000001031,
+        "race": 143.26666666667282
+      },
+      "reloaded": {
+        "lap": 47.35000000001031,
+        "race": 143.26666666667282
+      }
+    },
+    {
+      "name": "records-number",
+      "passed": true,
+      "errors": [],
+      "finishText": "2:23.266",
+      "record": {
+        "lap": 47.35000000001031,
+        "race": 143.26666666667282
+      },
+      "reloaded": {
+        "lap": 47.35000000001031,
+        "race": 143.26666666667282
+      }
+    },
+    {
+      "name": "record-fields-missing",
+      "passed": true,
+      "errors": [],
+      "finishText": "2:23.266",
+      "record": {
+        "lap": 47.35000000001031,
+        "race": 143.26666666667282
+      },
+      "reloaded": {
+        "lap": 47.35000000001031,
+        "race": 143.26666666667282
+      }
+    }
+  ],
+  "errors": [],
+  "warnings": []
+}

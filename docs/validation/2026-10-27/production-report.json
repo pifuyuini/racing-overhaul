@@ -1,0 +1,17 @@
+{
+  "recordedAt": "2026-10-26T20:44:18.491Z",
+  "browserVersion": "155.0.8059.85",
+  "blockedStorageStillPlayable": true,
+  "url": "http://localhost:4173/",
+  "rendering": {
+    "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1, Unspecified Version)",
+    "viewport": [1366, 768],
+    "quality": "medium"
+  },
+  "productionTestApiAbsent": true,
+  "automaticAcceleration": true,
+  "keyboardLaneAndNitro": true,
+  "pauseAndReturn": true,
+  "noExternalRequests": true,
+  "errors": []
+}

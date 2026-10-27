@@ -1,0 +1,1319 @@
+{
+  "passed": true,
+  "errors": [],
+  "warnings": [],
+  "scenes": {
+    "airborne": {
+      "elapsed": 2.366666666666663,
+      "racers": [
+        {
+          "id": 0,
+          "characterId": "panda",
+          "name": "你",
+          "x": 159.31448057587338,
+          "z": -13.622732678911664,
+          "yaw": -3.0007631680389415,
+          "previousX": 159.3769139519307,
+          "previousZ": -13.240737606188455,
+          "previousYaw": -3.006205954442823,
+          "speed": 23.22412903663446,
+          "velocityYaw": -3.0007631680389415,
+          "lateralSpeed": 0,
+          "heightOffset": 1.4083333333333337,
+          "previousHeightOffset": 1.3250000000000002,
+          "verticalSpeed": 5.0000000000000036,
+          "surface": "wood",
+          "grip": 0.94,
+          "slipTime": 0,
+          "impactTime": 0,
+          "impactStrength": 0,
+          "landingTime": 0,
+          "acceleration": 9.819275798277047,
+          "steer": 0.2177114561552571,
+          "progress": 0.21835495348418132,
+          "lastProgress": 0.21835495348418132,
+          "beforeStart": false,
+          "laps": 0,
+          "nextCheckpoint": 0,
+          "lapStartedAt": 0,
+          "lapTimes": [],
+          "finishTime": null,
+          "driftCharge": 0,
+          "drifting": false,
+          "driftDirection": 0,
+          "boost": 2.000000000000001,
+          "shield": 0,
+          "stun": 0,
+          "invulnerable": 0,
+          "item": null,
+          "itemCooldown": 0,
+          "lane": 0,
+          "aiThink": 999.3166666666664,
+          "offroad": false,
+          "recovery": 0,
+          "completedDistance": 236.01098372089268,
+          "targetLane": 0,
+          "nitro": 86.89999999999995,
+          "nitroTime": 0,
+          "actionKind": "jump",
+          "actionTime": 1.0500000000000007,
+          "actionDuration": 1.25,
+          "perfectActions": 1,
+          "successfulActions": 1,
+          "nitroUses": 0
+        }
+      ],
+      "projectiles": [],
+      "stats": {
+        "calls": 194,
+        "triangles": 1094700,
+        "geometries": 137,
+        "textures": 17,
+        "events": {
+          "launch": 1,
+          "interaction": 1
+        },
+        "playerEvents": {
+          "launch": 1,
+          "interaction": 1
+        },
+        "items": {},
+        "averageFrameMs": 19.793749999999996
+      },
+      "visuals": {
+        "root": [159.3156043766424, 2.6068333333333413, -13.615856767602677],
+        "body": [159.3156043766424, 2.6067976856603985, -13.615856767602677],
+        "suspension": {
+          "y": -0.000035647672942967605,
+          "pitch": -0.09754239165679157,
+          "roll": 0.007584174084837643
+        },
+        "wheels": [
+          {
+            "x": 160.48278466290188,
+            "y": 3.0668333333333413,
+            "z": -12.791423520233774,
+            "contact": 1.2000000000000006,
+            "clearance": 1.3418333333333408
+          },
+          {
+            "x": 160.19383374579243,
+            "y": 3.0668333333333413,
+            "z": -14.831057646125378,
+            "contact": 1.2000000000000008,
+            "clearance": 1.3418333333333405
+          },
+          {
+            "x": 158.42334826394335,
+            "y": 3.0668333333333413,
+            "z": -12.49966725441452,
+            "contact": 1.200000000000001,
+            "clearance": 1.3418333333333403
+          },
+          {
+            "x": 158.1343973468339,
+            "y": 3.0668333333333413,
+            "z": -14.539301380306124,
+            "contact": 1.2000000000000013,
+            "clearance": 1.34183333333334
+          }
+        ],
+        "particles": 137,
+        "marks": 316,
+        "projectiles": 0,
+        "rings": 4
+      },
+      "bounds": [
+        {
+          "id": 0,
+          "minX": -0.21310741232407102,
+          "maxX": 0.21835735876375528,
+          "minY": -0.3310548310188509,
+          "maxY": 0.4468196103814372,
+          "allInFront": true
+        }
+      ],
+      "goVisible": false
+    },
+    "landing": {
+      "elapsed": 3.1166666666666605,
+      "racers": [
+        {
+          "id": 0,
+          "characterId": "panda",
+          "name": "你",
+          "x": 153.26192698961074,
+          "z": -32.60002797253557,
+          "yaw": -2.7048110711286832,
+          "previousX": 153.4712716875568,
+          "previousZ": -32.18299906041874,
+          "previousYaw": -2.713289656022623,
+          "speed": 28,
+          "velocityYaw": -2.7048110711286832,
+          "lateralSpeed": 0,
+          "heightOffset": 0,
+          "previousHeightOffset": 0,
+          "verticalSpeed": 0,
+          "surface": "wood",
+          "grip": 0.94,
+          "slipTime": 0,
+          "impactTime": 0,
+          "impactStrength": 0,
+          "landingTime": 0.31666666666666665,
+          "acceleration": 0,
+          "steer": 0.33914339575758845,
+          "progress": 0.23685495517952093,
+          "lastProgress": 0.23685495517952093,
+          "beforeStart": false,
+          "laps": 0,
+          "nextCheckpoint": 0,
+          "lapStartedAt": 0,
+          "lapTimes": [],
+          "finishTime": null,
+          "driftCharge": 0,
+          "drifting": false,
+          "driftDirection": 0,
+          "boost": 1.2500000000000036,
+          "shield": 0,
+          "stun": 0,
+          "invulnerable": 0,
+          "item": null,
+          "itemCooldown": 0,
+          "lane": 0,
+          "aiThink": 1000.0666666666657,
+          "offroad": false,
+          "recovery": 0,
+          "completedDistance": 256.0068827343382,
+          "targetLane": 0,
+          "nitro": 91.3999999999997,
+          "nitroTime": 0,
+          "actionKind": "jump",
+          "actionTime": 0.29999999999999943,
+          "actionDuration": 1.25,
+          "perfectActions": 1,
+          "successfulActions": 1,
+          "nitroUses": 0
+        }
+      ],
+      "projectiles": [],
+      "stats": {
+        "calls": 195,
+        "triangles": 1094790,
+        "geometries": 140,
+        "textures": 19,
+        "events": {
+          "launch": 1,
+          "interaction": 1,
+          "land": 1
+        },
+        "playerEvents": {
+          "launch": 1,
+          "interaction": 1,
+          "land": 1
+        },
+        "items": {},
+        "averageFrameMs": 17.77833333333331
+      },
+      "visuals": {
+        "root": [153.26569519417376, 1.2000000000000155, -32.59252145211748],
+        "body": [153.26569519417376, 1.1309742474649513, -32.59252145211748],
+        "suspension": {
+          "y": -0.06902575253506407,
+          "pitch": 0.051521517131303964,
+          "roll": 0.014627296840660066
+        },
+        "wheels": [
+          {
+            "x": 154.62255422629622,
+            "y": 1.7250000000000107,
+            "z": -32.144265312229,
+            "contact": 1.2000000000000108,
+            "clearance": 0
+          },
+          {
+            "x": 153.7514067924315,
+            "y": 1.7250000000000152,
+            "z": -34.01100100548366,
+            "contact": 1.200000000000015,
+            "clearance": 2.220446049250313e-16
+          },
+          {
+            "x": 152.73769488553424,
+            "y": 1.725000000000016,
+            "z": -31.26466013628794,
+            "contact": 1.2000000000000162,
+            "clearance": 0
+          },
+          {
+            "x": 151.86654745166953,
+            "y": 1.7250000000000223,
+            "z": -33.13139582954259,
+            "contact": 1.2000000000000222,
+            "clearance": 2.220446049250313e-16
+          }
+        ],
+        "particles": 21,
+        "marks": 316,
+        "projectiles": 0,
+        "rings": 1
+      },
+      "bounds": [
+        {
+          "id": 0,
+          "minX": -0.17348339333706603,
+          "maxX": 0.1809758086172991,
+          "minY": -0.439225672771651,
+          "maxY": 0.21537299961261125,
+          "allInFront": true
+        }
+      ],
+      "goVisible": false
+    },
+    "combat": {
+      "before": {
+        "elapsed": 2.2333333333333303,
+        "racers": [
+          {
+            "id": 0,
+            "characterId": "panda",
+            "name": "你",
+            "x": 98.15425062322957,
+            "z": -52.707735292402184,
+            "yaw": -2.7554771804735796,
+            "previousX": 98.16783332737593,
+            "previousZ": -52.673436282282594,
+            "previousYaw": -2.755029609304597,
+            "speed": 2.213487164374276,
+            "velocityYaw": -2.7554771804735796,
+            "lateralSpeed": 0,
+            "heightOffset": 0,
+            "previousHeightOffset": 0,
+            "verticalSpeed": 0,
+            "surface": "road",
+            "grip": 1,
+            "slipTime": 0,
+            "impactTime": 0,
+            "impactStrength": 0,
+            "landingTime": 0,
+            "acceleration": 11.908497993261875,
+            "steer": -0.01790284675931275,
+            "progress": 0.3002057267107898,
+            "lastProgress": 0.3002057267107898,
+            "beforeStart": false,
+            "laps": 0,
+            "nextCheckpoint": 0,
+            "lapStartedAt": 0,
+            "lapTimes": [],
+            "finishTime": null,
+            "driftCharge": 0,
+            "drifting": false,
+            "driftDirection": 0,
+            "boost": 0,
+            "shield": 0,
+            "stun": 0,
+            "invulnerable": 0,
+            "item": "pulse",
+            "itemCooldown": 0,
+            "lane": 0,
+            "aiThink": 999.1833333333332,
+            "offroad": false,
+            "recovery": 0,
+            "completedDistance": 324.48015375475234,
+            "targetLane": 0,
+            "nitro": 61.100000000000016,
+            "nitroTime": 0,
+            "actionKind": null,
+            "actionTime": 0,
+            "actionDuration": 0,
+            "perfectActions": 0,
+            "successfulActions": 0,
+            "nitroUses": 0
+          },
+          {
+            "id": 1,
+            "characterId": "capybara",
+            "name": "椰椰",
+            "x": 94.71802994940111,
+            "z": -55.818843335154206,
+            "yaw": -2.7586031451744297,
+            "previousX": 94.73070589306299,
+            "previousZ": -55.78762891017106,
+            "previousYaw": -2.7575607214361693,
+            "speed": 2.0214033613040114,
+            "velocityYaw": -2.7558451861449407,
+            "lateralSpeed": 0,
+            "heightOffset": 0,
+            "previousHeightOffset": 0,
+            "verticalSpeed": 0,
+            "surface": "road",
+            "grip": 1,
+            "slipTime": 0,
+            "impactTime": 0,
+            "impactStrength": 0,
+            "landingTime": 0,
+            "acceleration": 10.892645449759133,
+            "steer": -0.21541432299266786,
+            "progress": 0.3039342070927311,
+            "lastProgress": 0.3039342070927311,
+            "beforeStart": false,
+            "laps": 0,
+            "nextCheckpoint": 0,
+            "lapStartedAt": 0,
+            "lapTimes": [],
+            "finishTime": null,
+            "driftCharge": 0,
+            "drifting": false,
+            "driftDirection": 0,
+            "boost": 0,
+            "shield": 0,
+            "stun": 0,
+            "invulnerable": 0,
+            "item": null,
+            "itemCooldown": 0,
+            "lane": 2,
+            "aiThink": 999.1833333333332,
+            "offroad": false,
+            "recovery": 0,
+            "completedDistance": 324.3101164768474,
+            "targetLane": 0,
+            "nitro": 60,
+            "nitroTime": 0,
+            "actionKind": null,
+            "actionTime": 0,
+            "actionDuration": 0,
+            "perfectActions": 0,
+            "successfulActions": 0,
+            "nitroUses": 0
+          }
+        ],
+        "projectiles": [],
+        "stats": {
+          "calls": 244,
+          "triangles": 1174271,
+          "geometries": 161,
+          "textures": 18,
+          "events": {},
+          "playerEvents": {},
+          "items": {},
+          "averageFrameMs": 30.53333333333329
+        },
+        "visuals": {
+          "root": [98.15463093894567, 1.2000000046389259, -52.70677492011884],
+          "body": [98.15463093894567, 1.2000000046389259, -52.70677492011884],
+          "suspension": {
+            "y": 0,
+            "pitch": -0.03225841224964383,
+            "roll": -0.00003657617801570655
+          },
+          "wheels": [
+            {
+              "x": 99.48713236222085,
+              "y": 1.7250000035440416,
+              "z": -52.190596698019505,
+              "contact": 1.2000000035440417,
+              "clearance": 0
+            },
+            {
+              "x": 98.71132744043715,
+              "y": 1.7250000044393188,
+              "z": -54.098927571672235,
+              "contact": 1.2000000044393189,
+              "clearance": 0
+            },
+            {
+              "x": 97.5602740043579,
+              "y": 1.7250000048912746,
+              "z": -51.407259689616545,
+              "contact": 1.2000000048912747,
+              "clearance": 0
+            },
+            {
+              "x": 96.7844690825742,
+              "y": 1.7250000061268826,
+              "z": -53.315590563269275,
+              "contact": 1.2000000061268827,
+              "clearance": 0
+            }
+          ],
+          "particles": 250,
+          "marks": 318,
+          "projectiles": 0,
+          "rings": 5
+        },
+        "bounds": [
+          {
+            "id": 0,
+            "minX": -0.3476149319180808,
+            "maxX": 0.34695842366652196,
+            "minY": -0.8519605165601314,
+            "maxY": 0.3208425849323771,
+            "allInFront": true
+          },
+          {
+            "id": 1,
+            "minX": -0.4043440852737852,
+            "maxX": 0.0005166524542334595,
+            "minY": -0.3881961268679665,
+            "maxY": 0.32792062911015524,
+            "allInFront": true
+          }
+        ],
+        "goVisible": false
+      },
+      "after": {
+        "elapsed": 2.5999999999999956,
+        "racers": [
+          {
+            "id": 0,
+            "characterId": "panda",
+            "name": "你",
+            "x": 97.56670354221085,
+            "z": -54.22847565814993,
+            "yaw": -2.7796650337691444,
+            "previousX": 97.60415182943822,
+            "previousZ": -54.1278029047202,
+            "previousYaw": -2.77800941578795,
+            "speed": 6.444859212760036,
+            "velocityYaw": -2.7796650337691444,
+            "lateralSpeed": 0,
+            "heightOffset": 0,
+            "previousHeightOffset": 0,
+            "verticalSpeed": 0,
+            "surface": "road",
+            "grip": 1,
+            "slipTime": 0,
+            "impactTime": 0,
+            "impactStrength": 0,
+            "landingTime": 0,
+            "acceleration": 11.210455054663555,
+            "steer": -0.06622471924778495,
+            "progress": 0.30171417304506765,
+            "lastProgress": 0.30171417304506765,
+            "beforeStart": false,
+            "laps": 0,
+            "nextCheckpoint": 0,
+            "lapStartedAt": 0,
+            "lapTimes": [],
+            "finishTime": null,
+            "driftCharge": 0,
+            "drifting": false,
+            "driftDirection": 0,
+            "boost": 0,
+            "shield": 0,
+            "stun": 0,
+            "invulnerable": 0,
+            "item": null,
+            "itemCooldown": 0.24999999999999978,
+            "lane": 0,
+            "aiThink": 0.35,
+            "offroad": false,
+            "recovery": 0,
+            "completedDistance": 326.1105720143906,
+            "targetLane": 0,
+            "nitro": 63.30000000000005,
+            "nitroTime": 0,
+            "actionKind": null,
+            "actionTime": 0,
+            "actionDuration": 0,
+            "perfectActions": 0,
+            "successfulActions": 0,
+            "nitroUses": 0
+          },
+          {
+            "id": 1,
+            "characterId": "capybara",
+            "name": "椰椰",
+            "x": 93.90465192140715,
+            "z": -57.4835954319897,
+            "yaw": -2.8142403387738844,
+            "previousX": 93.98888021466844,
+            "previousZ": -57.3349479561363,
+            "previousYaw": -2.809466536620543,
+            "speed": 10.071021187045934,
+            "velocityYaw": -2.801330689849788,
+            "lateralSpeed": 1.7875808478954942,
+            "heightOffset": 0,
+            "previousHeightOffset": 0,
+            "verticalSpeed": 0,
+            "surface": "road",
+            "grip": 1,
+            "slipTime": 0,
+            "impactTime": 0.3166666666666667,
+            "impactStrength": 0.6,
+            "landingTime": 0,
+            "acceleration": 9.720095590265032,
+            "steer": -0.3116772606972743,
+            "progress": 0.3055555555555556,
+            "lastProgress": 0.3055555555555556,
+            "beforeStart": false,
+            "laps": 0,
+            "nextCheckpoint": 0,
+            "lapStartedAt": 0,
+            "lapTimes": [],
+            "finishTime": null,
+            "driftCharge": 0,
+            "drifting": false,
+            "driftDirection": 0,
+            "boost": 0,
+            "shield": 0,
+            "stun": 0,
+            "invulnerable": 0.6166666666666664,
+            "item": null,
+            "itemCooldown": 0,
+            "lane": 2,
+            "aiThink": 999.5499999999995,
+            "offroad": false,
+            "recovery": 0,
+            "completedDistance": 326.0625660529148,
+            "targetLane": 0,
+            "nitro": 60,
+            "nitroTime": 0,
+            "actionKind": null,
+            "actionTime": 0,
+            "actionDuration": 0,
+            "perfectActions": 0,
+            "successfulActions": 0,
+            "nitroUses": 0
+          }
+        ],
+        "projectiles": [
+          {
+            "id": 0,
+            "type": "pulse",
+            "owner": 0,
+            "x": 98.15425062322957,
+            "z": -52.707735292402184,
+            "yaw": -2.7554771804735796,
+            "ttl": 0.15333333333333338,
+            "heightOffset": 0,
+            "radius": 7.099999999999997,
+            "hitRacers": [1]
+          }
+        ],
+        "stats": {
+          "calls": 251,
+          "triangles": 1174891,
+          "geometries": 163,
+          "textures": 18,
+          "events": {
+            "item-use": 1,
+            "hit": 1
+          },
+          "playerEvents": {
+            "item-use": 1
+          },
+          "items": {
+            "pulse": 1
+          },
+          "averageFrameMs": 19.6392857142857
+        },
+        "visuals": {
+          "root": [97.56767719767876, 1.2000000055123483, -54.22585816656076],
+          "body": [97.56767719767876, 1.2000000055123483, -54.22585816656076],
+          "suspension": {
+            "y": 0,
+            "pitch": -0.03455273248179124,
+            "roll": -0.0005670755268694245
+          },
+          "wheels": [
+            {
+              "x": 98.88732155161809,
+              "y": 1.725000004221684,
+              "z": -53.67764399389094,
+              "contact": 1.2000000042216838,
+              "clearance": 2.220446049250313e-16
+            },
+            {
+              "x": 98.15783870235028,
+              "y": 1.7250000052312182,
+              "z": -55.6041576254607,
+              "contact": 1.2000000052312183,
+              "clearance": 0
+            },
+            {
+              "x": 96.94210390420784,
+              "y": 1.725000005857952,
+              "z": -52.94107878686324,
+              "contact": 1.2000000058579519,
+              "clearance": 2.220446049250313e-16
+            },
+            {
+              "x": 96.21262105494003,
+              "y": 1.7250000072587683,
+              "z": -54.867592418433,
+              "contact": 1.2000000072587684,
+              "clearance": 0
+            }
+          ],
+          "particles": 35,
+          "marks": 320,
+          "projectiles": 1,
+          "rings": 1
+        },
+        "bounds": [
+          {
+            "id": 0,
+            "minX": -0.3248216848578491,
+            "maxX": 0.318094896626969,
+            "minY": -0.7823581180215649,
+            "maxY": 0.3195124023930063,
+            "allInFront": true
+          },
+          {
+            "id": 1,
+            "minX": -0.40819812737741035,
+            "maxX": -0.006396764850874913,
+            "minY": -0.3579144318841492,
+            "maxY": 0.32635287318548495,
+            "allInFront": true
+          }
+        ],
+        "goVisible": false
+      },
+      "leftShift": 0.13234047327698628
+    },
+    "contact": {
+      "before": {
+        "elapsed": 2.1833333333333305,
+        "racers": [
+          {
+            "id": 0,
+            "characterId": "panda",
+            "name": "你",
+            "x": 96.66811150645324,
+            "z": -55.11801269579411,
+            "yaw": -2.7839703072554394,
+            "previousX": 96.82763103962002,
+            "previousZ": -54.769437905989214,
+            "previousYaw": -2.778615975474206,
+            "speed": 22.71359572311634,
+            "velocityYaw": -2.7839703072554394,
+            "lateralSpeed": 2.191591470647692,
+            "heightOffset": 0,
+            "previousHeightOffset": 0,
+            "verticalSpeed": 0,
+            "surface": "road",
+            "grip": 1,
+            "slipTime": 0,
+            "impactTime": 0.22333333333333338,
+            "impactStrength": 0.3620946963931785,
+            "landingTime": 0,
+            "acceleration": 4.252194422250071,
+            "steer": -0.2141732712493365,
+            "progress": 0.30276563000760803,
+            "lastProgress": 0.30276563000760803,
+            "beforeStart": false,
+            "laps": 0,
+            "nextCheckpoint": 0,
+            "lapStartedAt": 0,
+            "lapTimes": [],
+            "finishTime": null,
+            "driftCharge": 0,
+            "drifting": false,
+            "driftDirection": 0,
+            "boost": 0,
+            "shield": 0,
+            "stun": 0,
+            "invulnerable": 0,
+            "item": null,
+            "itemCooldown": 0,
+            "lane": 0.5334203754297602,
+            "aiThink": 999.1333333333332,
+            "offroad": false,
+            "recovery": 0,
+            "completedDistance": 327.2470490583488,
+            "targetLane": 0,
+            "nitro": 60.80000000000001,
+            "nitroTime": 0,
+            "actionKind": null,
+            "actionTime": 0,
+            "actionDuration": 0,
+            "perfectActions": 0,
+            "successfulActions": 0,
+            "nitroUses": 0
+          },
+          {
+            "id": 1,
+            "characterId": "capybara",
+            "name": "椰椰",
+            "x": 98.87435229763467,
+            "z": -55.92564313496865,
+            "yaw": -2.789358270140243,
+            "previousX": 99.02652060542596,
+            "previousZ": -55.59385168279666,
+            "previousYaw": -2.78270802106362,
+            "speed": 21.83962968282593,
+            "velocityYaw": -2.770821467226978,
+            "lateralSpeed": 1.8849547588533213,
+            "heightOffset": 0,
+            "previousHeightOffset": 0,
+            "verticalSpeed": 0,
+            "surface": "road",
+            "grip": 1,
+            "slipTime": 0,
+            "impactTime": 0.22333333333333338,
+            "impactStrength": 0.3620946963931785,
+            "landingTime": 0,
+            "acceleration": -1.7483356727284871,
+            "steer": -0.3069799615719066,
+            "progress": 0.3027985365217989,
+            "lastProgress": 0.3027985365217989,
+            "beforeStart": false,
+            "laps": 0,
+            "nextCheckpoint": 0,
+            "lapStartedAt": 0,
+            "lapTimes": [],
+            "finishTime": null,
+            "driftCharge": 0,
+            "drifting": false,
+            "driftDirection": 0,
+            "boost": 0,
+            "shield": 0,
+            "stun": 0,
+            "invulnerable": 0,
+            "item": null,
+            "itemCooldown": 0,
+            "lane": -2,
+            "aiThink": 999.1333333333332,
+            "offroad": false,
+            "recovery": 0,
+            "completedDistance": 327.2826163704757,
+            "targetLane": 0,
+            "nitro": 60,
+            "nitroTime": 0,
+            "actionKind": null,
+            "actionTime": 0,
+            "actionDuration": 0,
+            "perfectActions": 0,
+            "successfulActions": 0,
+            "nitroUses": 0
+          }
+        ],
+        "projectiles": [],
+        "stats": {
+          "calls": 249,
+          "triangles": 1174959,
+          "geometries": 162,
+          "textures": 18,
+          "events": {
+            "collision": 1
+          },
+          "playerEvents": {
+            "collision": 1
+          },
+          "items": {},
+          "averageFrameMs": 44.433333333333394
+        },
+        "visuals": {
+          "root": [96.6706638189839, 1.2000000067419412, -55.112435499157264],
+          "body": [96.6706638189839, 1.1920283880017988, -55.112435499157264],
+          "suspension": {
+            "y": -0.007971618740142317,
+            "pitch": -0.010968711462930533,
+            "roll": 0.011132216483289816
+          },
+          "wheels": [
+            {
+              "x": 97.98795934564816,
+              "y": 1.725000005172264,
+              "z": -54.558601141763,
+              "contact": 1.2000000051722641,
+              "clearance": 0
+            },
+            {
+              "x": 97.26669515272538,
+              "y": 1.7250000063865385,
+              "z": -56.48820679163227,
+              "contact": 1.2000000063865386,
+              "clearance": 0
+            },
+            {
+              "x": 96.03961966034326,
+              "y": 1.7250000071763787,
+              "z": -53.830334383860375,
+              "contact": 1.2000000071763788,
+              "clearance": 0
+            },
+            {
+              "x": 95.31835546742047,
+              "y": 1.7250000088611528,
+              "z": -55.75994003372965,
+              "contact": 1.2000000088611527,
+              "clearance": 2.220446049250313e-16
+            }
+          ],
+          "particles": 325,
+          "marks": 321,
+          "projectiles": 0,
+          "rings": 6
+        },
+        "bounds": [
+          {
+            "id": 0,
+            "minX": -0.2920255104225072,
+            "maxX": 0.21584267919533634,
+            "minY": -0.6046347234468002,
+            "maxY": 0.2915399336651319,
+            "allInFront": true
+          },
+          {
+            "id": 1,
+            "minX": 0.002219863615856747,
+            "maxX": 0.5222717263085246,
+            "minY": -0.6160070213204117,
+            "maxY": 0.29140483242934906,
+            "allInFront": true
+          }
+        ],
+        "goVisible": false
+      },
+      "after": {
+        "elapsed": 2.2333333333333303,
+        "racers": [
+          {
+            "id": 0,
+            "characterId": "panda",
+            "name": "你",
+            "x": 96.18456351281627,
+            "z": -55.764643327140696,
+            "yaw": -2.795121044077018,
+            "previousX": 96.4228716059011,
+            "previousZ": -55.43899711652073,
+            "previousYaw": -2.7894937403527256,
+            "speed": 22.83252458801908,
+            "velocityYaw": -2.795121044077018,
+            "lateralSpeed": 1.8863202598515916,
+            "heightOffset": 0,
+            "previousHeightOffset": 0,
+            "verticalSpeed": 0,
+            "surface": "road",
+            "grip": 1,
+            "slipTime": 0,
+            "impactTime": 0.19000000000000006,
+            "impactStrength": 0.3620946963931785,
+            "landingTime": 0,
+            "acceleration": 3.350769139736798,
+            "steer": -0.22509214897169727,
+            "progress": 0.30346891616034566,
+            "lastProgress": 0.30346891616034566,
+            "beforeStart": false,
+            "laps": 0,
+            "nextCheckpoint": 0,
+            "lapStartedAt": 0,
+            "lapTimes": [],
+            "finishTime": null,
+            "driftCharge": 0,
+            "drifting": false,
+            "driftDirection": 0,
+            "boost": 0,
+            "shield": 0,
+            "stun": 0,
+            "invulnerable": 0,
+            "item": null,
+            "itemCooldown": 0,
+            "lane": 0.7907974497532648,
+            "aiThink": 999.1666666666665,
+            "offroad": false,
+            "recovery": 0,
+            "completedDistance": 328.00720244207736,
+            "targetLane": -1,
+            "nitro": 61.000000000000014,
+            "nitroTime": 0,
+            "actionKind": null,
+            "actionTime": 0,
+            "actionDuration": 0,
+            "perfectActions": 0,
+            "successfulActions": 0,
+            "nitroUses": 0
+          },
+          {
+            "id": 1,
+            "characterId": "capybara",
+            "name": "椰椰",
+            "x": 98.56303143195933,
+            "z": -56.585843287455255,
+            "yaw": -2.8035567583987193,
+            "previousX": 98.71678257757685,
+            "previousZ": -56.25519192148207,
+            "previousYaw": -2.796327935834228,
+            "speed": 21.78146825337702,
+            "velocityYaw": -2.7805408018456084,
+            "lateralSpeed": 1.6223955961454248,
+            "heightOffset": 0,
+            "previousHeightOffset": 0,
+            "verticalSpeed": 0,
+            "surface": "road",
+            "grip": 1,
+            "slipTime": 0,
+            "impactTime": 0.19000000000000006,
+            "impactStrength": 0.3620946963931785,
+            "landingTime": 0,
+            "acceleration": -1.7436796550506273,
+            "steer": -0.334003270262898,
+            "progress": 0.3034999598632617,
+            "lastProgress": 0.3034999598632617,
+            "beforeStart": false,
+            "laps": 0,
+            "nextCheckpoint": 0,
+            "lapStartedAt": 0,
+            "lapTimes": [],
+            "finishTime": null,
+            "driftCharge": 0,
+            "drifting": false,
+            "driftDirection": 0,
+            "boost": 0,
+            "shield": 0,
+            "stun": 0,
+            "invulnerable": 0,
+            "item": null,
+            "itemCooldown": 0,
+            "lane": -2,
+            "aiThink": 999.1666666666665,
+            "offroad": false,
+            "recovery": 0,
+            "completedDistance": 328.0407563173005,
+            "targetLane": 0,
+            "nitro": 60,
+            "nitroTime": 0,
+            "actionKind": null,
+            "actionTime": 0,
+            "actionDuration": 0,
+            "perfectActions": 0,
+            "successfulActions": 0,
+            "nitroUses": 0
+          }
+        ],
+        "projectiles": [],
+        "stats": {
+          "calls": 250,
+          "triangles": 1174971,
+          "geometries": 162,
+          "textures": 18,
+          "events": {
+            "collision": 1
+          },
+          "playerEvents": {
+            "collision": 1
+          },
+          "items": {},
+          "averageFrameMs": 33.319999999999794
+        },
+        "visuals": {
+          "root": [96.18885305849179, 1.2000000075591715, -55.75878169534955],
+          "body": [96.18885305849179, 1.1916333208483167, -55.75878169534955],
+          "suspension": {
+            "y": -0.008366686710854691,
+            "pitch": -0.010905611975575009,
+            "roll": 0.01040336895210814
+          },
+          "wheels": [
+            {
+              "x": 97.49990003811823,
+              "y": 1.7250000058076784,
+              "z": -55.19031373916172,
+              "contact": 1.2000000058076783,
+              "clearance": 2.220446049250313e-16
+            },
+            {
+              "x": 96.8001664959375,
+              "y": 1.7250000071348652,
+              "z": -57.1278309571361,
+              "contact": 1.2000000071348653,
+              "clearance": 0
+            },
+            {
+              "x": 95.54357197336739,
+              "y": 1.7250000080734043,
+              "z": -54.483786667445244,
+              "contact": 1.2000000080734043,
+              "clearance": 0
+            },
+            {
+              "x": 94.84383843118667,
+              "y": 1.7250000099183613,
+              "z": -56.42130388541963,
+              "contact": 1.2000000099183614,
+              "clearance": 0
+            }
+          ],
+          "particles": 294,
+          "marks": 325,
+          "projectiles": 0,
+          "rings": 6
+        },
+        "bounds": [
+          {
+            "id": 0,
+            "minX": -0.2997788098536225,
+            "maxX": 0.1908284154437381,
+            "minY": -0.5799682078856948,
+            "maxY": 0.2904363805740577,
+            "allInFront": true
+          },
+          {
+            "id": 1,
+            "minX": 0.003534448351458775,
+            "maxX": 0.5100165545248518,
+            "minY": -0.5957131037226983,
+            "maxY": 0.2902500158174061,
+            "allInFront": true
+          }
+        ],
+        "goVisible": false
+      }
+    }
+  },
+  "bridge": [
+    {
+      "name": "start",
+      "progress": 0.189,
+      "visuals": {
+        "root": [158.44538843337585, 1.2, 17.95073683654932],
+        "body": [158.44538843337585, 1.2, 17.95073683654932],
+        "suspension": {
+          "y": 0,
+          "pitch": 0,
+          "roll": 0
+        },
+        "wheels": [
+          {
+            "x": 159.29986710536664,
+            "y": 1.725,
+            "z": 19.096104113501493,
+            "contact": 1.2,
+            "clearance": 2.220446049250313e-16
+          },
+          {
+            "x": 159.65677861914105,
+            "y": 1.725,
+            "z": 17.06725858677077,
+            "contact": 1.2,
+            "clearance": 2.220446049250313e-16
+          },
+          {
+            "x": 157.2513240492502,
+            "y": 1.725,
+            "z": 18.7357274393992,
+            "contact": 1.2,
+            "clearance": 2.220446049250313e-16
+          },
+          {
+            "x": 157.60823556302458,
+            "y": 1.725,
+            "z": 16.70688191266847,
+            "contact": 1.2,
+            "clearance": 2.220446049250313e-16
+          }
+        ],
+        "particles": 224,
+        "marks": 170,
+        "projectiles": 0,
+        "rings": 4
+      },
+      "stats": {
+        "calls": 154,
+        "triangles": 1093398,
+        "geometries": 121,
+        "textures": 15,
+        "events": {},
+        "playerEvents": {},
+        "items": {},
+        "averageFrameMs": 41.65000000000019
+      }
+    },
+    {
+      "name": "mid",
+      "progress": 0.215,
+      "visuals": {
+        "root": [159.8065274096001, 1.2000000000000006, -10.030617736908173],
+        "body": [159.8065274096001, 1.2000000000000006, -10.030617736908173],
+        "suspension": {
+          "y": 0,
+          "pitch": 0,
+          "roll": 9.171348548548307e-17
+        },
+        "wheels": [
+          {
+            "x": 160.94704475958815,
+            "y": 1.7250000000000005,
+            "z": -9.169676290364764,
+            "contact": 1.2000000000000004,
+            "clearance": 2.220446049250313e-16
+          },
+          {
+            "x": 160.72275706562084,
+            "y": 1.7250000000000005,
+            "z": -11.217429945064183,
+            "contact": 1.2000000000000006,
+            "clearance": 0
+          },
+          {
+            "x": 158.87941000144505,
+            "y": 1.7250000000000005,
+            "z": -8.943211045970582,
+            "contact": 1.2000000000000006,
+            "clearance": 0
+          },
+          {
+            "x": 158.65512230747774,
+            "y": 1.725000000000001,
+            "z": -10.99096470067,
+            "contact": 1.2000000000000008,
+            "clearance": 2.220446049250313e-16
+          }
+        ],
+        "particles": 149,
+        "marks": 170,
+        "projectiles": 0,
+        "rings": 2
+      },
+      "stats": {
+        "calls": 167,
+        "triangles": 1094040,
+        "geometries": 130,
+        "textures": 16,
+        "events": {},
+        "playerEvents": {},
+        "items": {},
+        "averageFrameMs": 16.650000000000276
+      }
+    },
+    {
+      "name": "end",
+      "progress": 0.241,
+      "visuals": {
+        "root": [151.04864370879815, 1.2000000000000328, -36.49315585711796],
+        "body": [151.04864370879815, 1.2000000000000328, -36.49315585711796],
+        "suspension": {
+          "y": 0,
+          "pitch": -2.3899680620838956e-15,
+          "roll": 2.4163644997900767e-15
+        },
+        "wheels": [
+          {
+            "x": 152.45243573507923,
+            "y": 1.7250000000000232,
+            "z": -36.22600805729609,
+            "contact": 1.2000000000000233,
+            "clearance": 0
+          },
+          {
+            "x": 151.34487555079036,
+            "y": 1.7250000000000334,
+            "z": -37.96293362800372,
+            "contact": 1.2000000000000333,
+            "clearance": 2.220446049250313e-16
+          },
+          {
+            "x": 150.6986468093162,
+            "y": 1.725000000000033,
+            "z": -35.10769486150927,
+            "contact": 1.2000000000000328,
+            "clearance": 2.220446049250313e-16
+          },
+          {
+            "x": 149.59108662502732,
+            "y": 1.7250000000000472,
+            "z": -36.84462043221691,
+            "contact": 1.200000000000047,
+            "clearance": 2.220446049250313e-16
+          }
+        ],
+        "particles": 46,
+        "marks": 170,
+        "projectiles": 0,
+        "rings": 2
+      },
+      "stats": {
+        "calls": 171,
+        "triangles": 1094557,
+        "geometries": 135,
+        "textures": 19,
+        "events": {},
+        "playerEvents": {},
+        "items": {},
+        "averageFrameMs": 16.699999999999715
+      }
+    }
+  ],
+  "resources": [
+    {
+      "cycle": 0,
+      "character": "panda",
+      "item": "pulse",
+      "calls": 579,
+      "triangles": 1668722,
+      "geometries": 314,
+      "textures": 20,
+      "events": {
+        "item-use": 1
+      },
+      "playerEvents": {
+        "item-use": 1
+      },
+      "items": {
+        "pulse": 1
+      },
+      "averageFrameMs": 16.662499999999916
+    },
+    {
+      "cycle": 0,
+      "character": "fox",
+      "item": "oil",
+      "calls": 579,
+      "triangles": 1668722,
+      "geometries": 314,
+      "textures": 20,
+      "events": {
+        "item-use": 1,
+        "slip": 1
+      },
+      "playerEvents": {
+        "item-use": 1
+      },
+      "items": {
+        "oil": 1
+      },
+      "averageFrameMs": 16.669999999999874
+    },
+    {
+      "cycle": 1,
+      "character": "panda",
+      "item": "pulse",
+      "calls": 579,
+      "triangles": 1668722,
+      "geometries": 314,
+      "textures": 20,
+      "events": {
+        "item-use": 1
+      },
+      "playerEvents": {
+        "item-use": 1
+      },
+      "items": {
+        "pulse": 1
+      },
+      "averageFrameMs": 16.674999999999997
+    },
+    {
+      "cycle": 1,
+      "character": "fox",
+      "item": "oil",
+      "calls": 579,
+      "triangles": 1668722,
+      "geometries": 314,
+      "textures": 20,
+      "events": {
+        "item-use": 1,
+        "slip": 1
+      },
+      "playerEvents": {
+        "item-use": 1
+      },
+      "items": {
+        "oil": 1
+      },
+      "averageFrameMs": 16.666666666666703
+    }
+  ]
+}

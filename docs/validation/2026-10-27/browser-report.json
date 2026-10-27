@@ -1,0 +1,23 @@
+{
+  "checks": [
+    "character selection",
+    "keyboard drift produces boost",
+    "pause screen",
+    "pause freezes simulation",
+    "keyboard item boost",
+    "keyboard item shield",
+    "keyboard item water",
+    "keyboard item banana",
+    "keyboard recovery",
+    "restart resets race",
+    "race completes three laps",
+    "settings persist",
+    "time trial has no rivals or items",
+    "time trial results",
+    "character changes release GPU geometry",
+    "no horizontal overflow",
+    "no runtime or shader errors"
+  ],
+  "errors": [],
+  "geometryCounts": [287, 282, 283, 283, 283, 283, 283, 283]
+}

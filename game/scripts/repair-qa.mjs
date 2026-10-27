@@ -11,7 +11,7 @@ assert.equal(
   'TMPDIR must point to the same task directory as QA_ARTIFACT_DIR.',
 );
 await access(path.join(dir, '.codex-tmp'));
-const base = process.env.QA_BASE_URL ?? 'http://10.10.10.1:5173/';
+const base = process.env.QA_BASE_URL ?? 'http://localhost:5173/';
 const report = {
   recordedAt: new Date().toISOString(),
   url: base,
@@ -23,7 +23,8 @@ const report = {
   warnings: [],
 };
 const browser = await chromium.launch({
-  executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+  executablePath:
+    process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
   headless: true,
 });
 const page = await browser.newPage({

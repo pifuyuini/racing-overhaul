@@ -3,11 +3,12 @@ import assert from 'node:assert/strict';
 import { writeFile } from 'node:fs/promises';
 import path from 'node:path';
 const dir = process.env.QA_ARTIFACT_DIR;
-const base = process.env.QA_BASE_URL ?? 'http://10.10.10.1:4173/';
+const base = process.env.QA_BASE_URL ?? 'http://localhost:4173/';
 const origin = new URL(base).origin;
 if (!dir) throw new Error('QA_ARTIFACT_DIR required');
 const browser = await chromium.launch({
-  executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+  executablePath:
+    process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
   headless: true,
 });
 const page = await browser.newPage({ viewport: { width: 1366, height: 768 } });

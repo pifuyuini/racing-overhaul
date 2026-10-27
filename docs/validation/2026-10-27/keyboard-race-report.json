@@ -1,0 +1,63 @@
+{
+  "reports": [
+    {
+      "difficulty": "normal",
+      "time": 141.15000000000447,
+      "laps": [47.349999999998595, 47.56666666666397, 46.2333333333419],
+      "position": 3,
+      "averageFrameMs": 16.666000000000064,
+      "fps": 60.00240009600361,
+      "drawCalls": 468,
+      "triangles": 1513958,
+      "peakGeometry": 368,
+      "peakHeight": 2.023888888888891,
+      "events": {
+        "collision": 221,
+        "pickup": 58,
+        "item-use": 55,
+        "shield": 10,
+        "hit": 23,
+        "launch": 3,
+        "interaction": 9,
+        "land": 3,
+        "boost": 8,
+        "shield-block": 4,
+        "slip": 19,
+        "lap": 19,
+        "finish": 1
+      },
+      "playerEvents": {
+        "pickup": 15,
+        "collision": 52,
+        "item-use": 15,
+        "launch": 3,
+        "interaction": 9,
+        "land": 3,
+        "shield": 3,
+        "shield-block": 1,
+        "slip": 2,
+        "lap": 3,
+        "hit": 3,
+        "finish": 1
+      },
+      "items": {
+        "water": 3,
+        "shield": 3,
+        "banana": 3,
+        "homing": 2,
+        "pulse": 2,
+        "oil": 2
+      },
+      "opponentFinishTimes": [
+        140.40000000000387,
+        137.93333333333524,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    }
+  ],
+  "errors": []
+}

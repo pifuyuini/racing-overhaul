@@ -31,7 +31,8 @@ const check = (name, value) => {
   report.checks.push(currentCase + ': ' + name);
 };
 const browser = await chromium.launch({
-  executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+  executablePath:
+    process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
   headless: true,
 });
 const page = await browser.newPage({
@@ -43,7 +44,7 @@ page.on('console', (e) => {
   if (e.type() === 'error') report.errors.push(e.text());
   if (e.type() === 'warning') report.warnings.push(e.text());
 });
-const base = process.env.QA_BASE_URL ?? 'http://10.10.10.1:5173/';
+const base = process.env.QA_BASE_URL ?? 'http://localhost:5173/';
 const frame = () =>
   page.evaluate(
     () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),

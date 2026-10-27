@@ -4,9 +4,9 @@
 
 ## 开始游玩
 
-远端构建版地址：[开始游玩](http://10.10.10.1:4173/)。
+公开入口：[开始游玩](https://pifuyuini.github.io/racing-overhaul/)。部署状态见[仓库入口说明](../README.md)。
 
-使用启用硬件加速、支持 WebGL 2 的桌面浏览器。电脑需要能访问 `10.10.10.1` 所在局域网。首次点击菜单后才会启用声音。
+使用启用硬件加速、支持 WebGL 2 的桌面浏览器。首次点击菜单后才会启用声音。
 
 ### 轻松驾驶（默认）
 
@@ -76,18 +76,15 @@
 
 ## 开发与构建
 
-所有命令在远端仓库的 `game/` 内执行。已使用现有 Node 24.17.0 和 npm 11.13.0，没有安装或升级系统运行时。
-
-远端非交互 SSH 默认 PATH 未包含 Node，可先执行：
+使用 Node.js 24 与 npm。所有游戏命令在仓库的 `game/` 内执行：
 
 ```sh
-export PATH=/opt/homebrew/opt/node@24/bin:$PATH
-cd /Users/yangshuyun/workspace/dev/gpt-space-20260922-2/game
+cd game
 npm ci
-npm run dev -- --host 10.10.10.1 --port 5173 --strictPort
+npm run dev
 ```
 
-访问开发版时使用 **http://10.10.10.1:5173/**。远端回环地址的相同端口可能属于其他服务，因此验证使用明确的局域网地址。
+打开开发服务器输出的地址，默认是 **http://localhost:5173/**。
 
 ```sh
 npm test
@@ -95,13 +92,11 @@ npm run build
 npm run preview
 ```
 
-`npm run build` 先进行 TypeScript 检查，再生成 `dist/`。该目录可由普通静态 HTTP 服务承载；资源已打包，运行时不依赖 CDN、在线字体或外部素材服务。Vite 的单包大小提示来自随包交付的三维引擎，实际传输大小见验证报告。
+`npm run build` 先进行 TypeScript 检查，再生成 `dist/`。预览默认位于 **http://localhost:4173/**。产物可由普通静态 HTTP 服务承载；资源已打包，运行时不依赖 CDN、在线字体或外部素材服务。Vite 的单包大小提示来自随包交付的三维引擎。
 
-初版依赖已固定版本，并提交 `package-lock.json`；本次驾驶改版没有新增或升级依赖：
+依赖固定版本，`package-lock.json` 随源码提交：运行依赖为 Three.js；开发与验证使用 TypeScript、Vite、Three.js 类型、Vitest、Playwright Core 与 Prettier。Playwright 使用已有的 Chrome，可用 `CHROME_PATH` 指定其可执行文件，不下载浏览器。
 
-- 运行依赖：Three.js。
-- 开发与验证：TypeScript、Vite、Three.js 类型、Vitest、Playwright Core、Prettier。
-- Playwright 使用远端已有的 Google Chrome，不下载浏览器。
+GitHub Pages 构建与自动发布见[仓库入口](../README.md#github-pages-发布)。本游戏目录保留现有结构，不需要移动源码。
 
 ## 源码结构
 
@@ -126,13 +121,20 @@ npm run preview
 
 ## 验证脚本
 
-运行浏览器检查前，在仓库根目录创建本任务专属临时目录并放置 `.codex-tmp` 标记，将绝对路径通过环境变量传入。所有测试截图、日志和浏览器临时文件应留在该目录。
+运行浏览器检查前，从仓库根目录创建专属临时目录及 `.codex-tmp` 标记；截图、日志与浏览器临时文件留在该目录。先在另一个终端运行开发服务器，再执行：
 
 ```sh
-QA_ARTIFACT_DIR=/absolute/path/to/marked-task-directory \
-TMPDIR=/absolute/path/to/marked-task-directory \
+qa_dir="$(pwd)/tmp/$(date +%Y%m%d-%H%M%S)-local-qa"
+mkdir -p "$qa_dir"
+touch "$qa_dir/.codex-tmp"
+cd game
+QA_ARTIFACT_DIR="$qa_dir" \
+TMPDIR="$qa_dir" \
+QA_BASE_URL=http://localhost:5173/ \
 npm run qa
 ```
+
+需要指定系统浏览器时，同样加入 `CHROME_PATH` 环境变量。`QA_ARTIFACT_DIR` 与 `TMPDIR` 应指向同一个专属目录。
 
 同样设置环境变量后，`npm run qa:assisted` 运行约 5 分钟的新玩法浏览器检查，`node scripts/keyboard-race-qa.mjs` 运行手动版长时间键盘测试。两者使用开发版测试入口；`npm run qa:production` 测试 4173 构建版。可用 `QA_BASE_URL` 指定新玩法 / 构建版的实际地址（例如端口回退到 4174 时）。
 
@@ -144,7 +146,7 @@ npm run qa
 
 源码格式可用 `npm run format:check` 检查；`npm run format` 仅整理本游戏内的文件。
 
-详细结果见 `VALIDATION.md`。
+历史结果见 [VALIDATION.md](VALIDATION.md)，可公开的原始数据及发布验收状态见 [docs/validation](../docs/validation/README.md)。
 
 ## 边界
 

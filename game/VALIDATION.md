@@ -1,5 +1,7 @@
 # 萌爪海湾：验收记录
 
+本文件中的历史预览地址已统一写为可复现的本地地址；原始运行发生在当时的局域网开发环境。本文件保留各轮历史验证事实；数字对应当时版本与环境，不能视为本次 GitHub Pages 发布已通过。公开 JSON、核心测试摘要和本次发布检查见 [docs/validation](../docs/validation/README.md)。文中的 `tmp/` 路径是原始证据压缩包内的相对路径；压缩包与上传状态见该说明，源码仓库不重复保存全部截图与日志。
+
 ## 2026-10-27 驾驶物理、碰撞攻防与赛道作用升级
 
 ### 本轮行为
@@ -38,9 +40,9 @@
 
 ### 交付与边界
 
-- 构建仍由 [http://10.10.10.1:4173/](http://10.10.10.1:4173/) 提供，`game/dist/` 不入 Git。本轮新增 `public/verification/overhaul-airborne.png`、`overhaul-combat.png`、`overhaul-contact.png`，分别记录受控真实浏览器场景的离地、潮汐冲击与侧碰。
+- 构建仍由 [http://localhost:4173/](http://localhost:4173/) 提供，`game/dist/` 不入 Git。本轮新增 `public/verification/overhaul-airborne.png`、`overhaul-combat.png`、`overhaul-contact.png`，分别记录受控真实浏览器场景的离地、潮汐冲击与侧碰。
 - 完整功能/整场验收后，人工画面复核定位到旧浅色底路与木桥顶面共面的 Z-fighting；最终仅改为单层采样木纹桥面并移除重复起跳条，物理高度/规则不变。之后定向复核桥端/中段、真实起落、少量资源循环、类型/格式/构建及生产接口；未重复无关整场。交付截图等待 GO 自然消失后，以正式跟车镜头和真实 E/F 或物理接触拍摄。
-- 本任务唯一标记临时目录为远端 `/Users/yangshuyun/workspace/dev/gpt-space-20260922-2/tmp/20261027-racing-overhaul/`；核心日志、`overhaul-report.json`、`controls-report.json`、`assisted-browser-report.json`、`keyboard-race-report.json`、`repair-report.json`、`production-report.json` 及真实效果截图保留用于验收复核，未触碰旧任务临时目录。
+- 本任务唯一标记临时目录为远端 `tmp/20261027-racing-overhaul/`；核心日志、`overhaul-report.json`、`controls-report.json`、`assisted-browser-report.json`、`keyboard-race-report.json`、`repair-report.json`、`production-report.json` 及真实效果截图保留用于验收复核，未触碰旧任务临时目录。
 - 仍是桌面键盘优先、单赛道本地 AI 卡丁车；本轮未验证 Safari / Firefox、触屏或手柄。远端重启后预览服务需手动恢复。
 
 ## 2026-10-27 操控、角色与交互重做
@@ -77,14 +79,14 @@
 
 ### 证据与边界
 
-- 最新可玩构建仍为 [http://10.10.10.1:4173/](http://10.10.10.1:4173/)。交付截图为 `public/verification/controls-characters.png`（1280×720）与 `controls-hud.png`（1366×768）；使用真实浏览器截图。
-- 本任务标记临时目录为远端 `/Users/yangshuyun/workspace/dev/gpt-space-20260922-2/tmp/20261027-controls-characters/`。`controls-report.json`、`browser-report.json`、`assisted-browser-report.json`、`keyboard-race-report.json`、`repair-report.json`、`production-report.json` 及截图、日志保留用于验收复核。未触碰其他任务的临时目录。
+- 最新可玩构建仍为 [http://localhost:4173/](http://localhost:4173/)。交付截图为 `public/verification/controls-characters.png`（1280×720）与 `controls-hud.png`（1366×768）；使用真实浏览器截图。
+- 本任务标记临时目录为远端 `tmp/20261027-controls-characters/`。`controls-report.json`、`browser-report.json`、`assisted-browser-report.json`、`keyboard-race-report.json`、`repair-report.json`、`production-report.json` 及截图、日志保留用于验收复核。未触碰其他任务的临时目录。
 - 完整长赛之后仅修正静态帮助页键帽分组；随后重新类型检查、格式化、构建并复核 1280×720 / 1366 宽帮助布局，不重复无关比赛。
 - 未安装或升级依赖。仍为桌面键盘优先、单赛道本地前端游戏；未验证 Safari / Firefox、手机触控或手柄；机器重启后预览服务需手动恢复。
 
 ## 2026-10-27 游玩问题修复
 
-- 恢复远端游玩服务；当前构建地址为 [http://10.10.10.1:4173/](http://10.10.10.1:4173/)。服务仍依赖远端机器运行，未配置系统开机自启。
+- 恢复远端游玩服务；当前构建地址为 [http://localhost:4173/](http://localhost:4173/)。服务仍依赖远端机器运行，未配置系统开机自启。
 - 修正 AI 在弯道过重减速导致标准 / 挑战难度缺乏竞争的问题。轻松档保持原样，其他难度仅调整弯道目标速度，不改变车辆物理、速度上限或位置。
 - 四角色 × 三种种子 × 两种策略，共 24 场模拟均正常完赛：标准难度无操作第 4–8 名，挑战难度主动操作第 1–5 名，其中 6 场夺冠。
 - 修复 ≤700px 结果页丢失总用时、最佳单圈、纪录提示与驾驶统计；选角色、模式、难度、驾驶方式后保留当前选项焦点。
@@ -110,7 +112,7 @@
 ### 证据与边界
 
 - 最终构建仍为 `game/dist/`，不纳入 Git。新增可复核界面图 `game/public/verification/repair-results.png`。
-- 本轮报告、截图与服务日志保留在远端 `/Users/yangshuyun/workspace/dev/gpt-space-20260922-2/tmp/20261027-game-repair/`，由本任务创建并带 `.codex-tmp` 标记。主要报告为 `browser-report.json`、`assisted-browser-report.json`、`production-report.json`、`repair-report.json`；保留用于验收复核和正在运行的服务日志。
+- 本轮报告、截图与服务日志保留在远端 `tmp/20261027-game-repair/`，由本任务创建并带 `.codex-tmp` 标记。主要报告为 `browser-report.json`、`assisted-browser-report.json`、`production-report.json`、`repair-report.json`；保留用于验收复核和正在运行的服务日志。
 - 长时间比赛验证驾驶改动，随后仅修改存档读取；存档修复后重新构建并运行新增坏存档 / 界面回归和生产冒烟，未重复两场长赛。
 - 仍为单赛道、桌面键盘优先的本地前端游戏；本轮没有新增手机触控、手柄、联网或账号，未验证 Safari / Firefox。
 
@@ -141,16 +143,16 @@
 - 构建版自动加速、键盘选线与氮气、暂停 / 返回、禁用浏览器存储仍可游玩均已通过；无运行错误、无外部资源请求，开发测试接口已剔除。
 - TypeScript 检查与静态构建通过。JS 约 646 kB、gzip 171 kB；CSS 约 27 kB。继续使用原有锁定依赖，没有安装新依赖或系统工具。
 - 构建位于远端 `game/dist/`，不进入 Git。新增实机截图 `game/public/verification/assisted.jpg` 随源码提交。
-- 构建服务为 [http://10.10.10.1:4173/](http://10.10.10.1:4173/)，无需 SSH 转发。验证结束后仅保留这一游玩服务，关闭本轮开发服务。
-- 本轮报告、截图与服务日志保留于远端 `/Users/yangshuyun/workspace/dev/gpt-space-20260922-2/tmp/20260928-assisted-drive/`；该目录由本轮创建并有 `.codex-tmp` 标记。最终检查见 `assisted-browser-report.json`、`browser-report.json`、`production-report.json`。
+- 构建服务为 [http://localhost:4173/](http://localhost:4173/)，无需 SSH 转发。验证结束后仅保留这一游玩服务，关闭本轮开发服务。
+- 本轮报告、截图与服务日志保留于远端 `tmp/20260928-assisted-drive/`；该目录由本轮创建并有 `.codex-tmp` 标记。最终检查见 `assisted-browser-report.json`、`browser-report.json`、`production-report.json`。
 - 仍为单赛道桌面前端游戏；未新增联网、账号、手机触控或手柄。选线为当前赛道上的左 / 中 / 右路线，并非新增分支赛道。Safari / Firefox 未进行本轮自动检查。
 
 ## 初版结论与环境
 
 核心游戏于 **2026-09-22** 完成验证，**2026-09-27** 恢复任务后确认上轮源码未发生额外改动、局域网构建服务仍正常运行，并补修浏览器禁止存储访问时的启动路径后完成交付整理。
 
-- 源码、构建和自动测试都在远端 `yangshuyun@10.10.10.1` 的指定仓库内完成。
-- 运行地址：[萌爪海湾](http://10.10.10.1:4173/)。
+- 源码、构建和自动测试都在当时的远端开发环境内完成。
+- 运行地址：[萌爪海湾](http://localhost:4173/)。
 - 工具环境：Node 24.17.0、npm 11.13.0；长跑测试使用远端已安装的 Google Chrome 153.0.8010.53；2026-09-27 的构建版冒烟检查使用机器更新后的 Chrome 154.0.8037.57。
 - 当前版本面向桌面键盘和 WebGL 2。浏览器没有向外部 CDN、字体或素材服务发出请求。
 - TypeScript 检查、生产构建、**26 项规则及输入测试**、**17 项浏览器检查**通过。
@@ -207,7 +209,7 @@
 - 固定依赖版本及锁文件随源码提交。未安装或升级系统 Node、Python 或浏览器。
 - 主菜单截图随源码保存在 `public/verification/home.jpg`。
 - 原始浏览器报告、完整比赛报告、过程截图及运行服务日志保留在远端：
-  `/Users/yangshuyun/workspace/dev/gpt-space-20260922-2/tmp/20260922-pawprint-qa/`。
+  `tmp/20260922-pawprint-qa/`。
   此目录由当前任务创建并带有 `.codex-tmp` 标记，保留用于验收复核和当前运行服务维护。
 - 没有新增公网托管、联网对战、账号、手机触控或手柄支持。Safari / Firefox 未做自动验证。
 - 局域网游玩依赖远端机器和静态服务持续运行；未配置系统开机自启。重启方式见 README。

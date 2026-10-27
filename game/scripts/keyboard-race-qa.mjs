@@ -2,9 +2,11 @@ import { chromium } from 'playwright-core';
 import { writeFile } from 'node:fs/promises';
 import path from 'node:path';
 const dir = process.env.QA_ARTIFACT_DIR;
+const base = process.env.QA_BASE_URL ?? 'http://localhost:5173/';
 if (!dir) throw new Error('Set QA_ARTIFACT_DIR.');
 const browser = await chromium.launch({
-  executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+  executablePath:
+    process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
   headless: true,
 });
 const page = await browser.newPage({
@@ -22,7 +24,7 @@ const errors = [],
   reports = [];
 page.on('pageerror', (e) => errors.push(e.message));
 try {
-  await page.goto('http://10.10.10.1:5173/', { waitUntil: 'networkidle' });
+  await page.goto(base, { waitUntil: 'networkidle' });
   await page.getByRole('button', { name: '设置', exact: true }).click();
   await page.locator('[data-setting="sound"]').uncheck();
   await page.getByRole('button', { name: '完成', exact: true }).click();
